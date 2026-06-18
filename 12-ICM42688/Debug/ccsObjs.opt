@@ -1,0 +1,17 @@
+"./ti_msp_dl_config.o"
+"./startup_mspm0g350x_ticlang.o"
+"./main.o"
+"./user_driver/ADC.o"
+"./user_driver/I2C_communication.o"
+"./user_driver/IMU_utf8.o"
+"./user_driver/No_Mcu_Ganv_Grayscale_Sensor.o"
+"./user_driver/PID.o"
+"./user_driver/Serial.o"
+"./user_driver/delay.o"
+"./user_driver/icm42688.o"
+"./user_driver/motor.o"
+"./user_driver/oled.o"
+"./user_driver/uart_vofa.o"
+-l"./device_linker.cmd"
+-ldevice.cmd.genlibs
+-llibc.a

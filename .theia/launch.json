@@ -1,0 +1,144 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "empty",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "empty",
+                "resourceId": "/empty"
+            }
+        },
+        {
+            "name": "02-CLOCLK",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "02-CLOCLK",
+                "resourceId": "/02-CLOCLK"
+            }
+        },
+        {
+            "name": "03-Block",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "03-Block",
+                "resourceId": "/03-Block"
+            }
+        },
+        {
+            "name": "04-OLED",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "04-OLED",
+                "resourceId": "/04-OLED"
+            }
+        },
+        {
+            "name": "05-USART",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "05-USART",
+                "resourceId": "/05-USART"
+            }
+        },
+        {
+            "name": "06-Key-ADC",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "06-Key-ADC",
+                "resourceId": "/06-Key-ADC"
+            }
+        },
+        {
+            "name": "07-Motor",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "07-Motor",
+                "resourceId": "/07-Motor"
+            },
+            "connections": [
+                {
+                    "name": "Texas Instruments XDS110 USB Debug Probe",
+                    "cores": [
+                        {
+                            "name": "CORTEX_M0P",
+                            "debuggerSettings": {
+                                "data": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n<PropertyValues/>\n"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "08-Encoder",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "08-Encoder",
+                "resourceId": "/08-Encoder"
+            }
+        },
+        {
+            "name": "09-PID",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "09-PID",
+                "resourceId": "/09-PID"
+            }
+        },
+        {
+            "name": "10-GraySensor",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "10-GraySensor",
+                "resourceId": "/10-GraySensor"
+            }
+        },
+        {
+            "name": "11-MPU6050",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "11-MPU6050",
+                "resourceId": "/11-MPU6050"
+            }
+        },
+        {
+            "name": "12-ICM42688",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "12-ICM42688",
+                "resourceId": "/12-ICM42688"
+            }
+        },
+        {
+            "name": "13-anglePID",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "13-anglePID",
+                "resourceId": "/13-anglePID"
+            }
+        },
+        {
+            "name": "09-PID copy",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "09-PID copy",
+                "resourceId": "/09-PID copy"
+            }
+        }
+    ]
+}

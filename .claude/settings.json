@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/00-pushing/03--visual/04--new_step/**)",
+      "Read(//d/00-pushing/03--visual/**)",
+      "Bash(ls \"D:/00-pushing/\" 2>/dev/null || echo \"Cannot access D:/00-pushing/\")",
+      "Read(//d/00-pushing/**)",
+      "Bash(find \"D:/\" -path \"*/ybUtils*\" -type f 2>/dev/null | head -30)",
+      "Read(//d//**)",
+      "Bash(find \"D:/\" -path \"*/YbUart*\" -type f 2>/dev/null | head -30)",
+      "Bash(find \"C:/Users\" -path \"*/ybUtils*\" -type f 2>/dev/null | head -10; find \"C:/Users\" -name \"YbUart*\" -type f 2>/dev/null | head -10)",
+      "Read(//c/Users/**)",
+      "Bash(\"D:/ti/ccs/ccs/tools/compiler/ti-cgt-armllvm_4.0.4.LTS/bin/tiarmobjdump.exe\" -s -j .data \"d:/00-pushing/07-ti/work/14-Blue_Serial/Debug/main.o\")"
+    ]
+  }
+}

@@ -139,6 +139,105 @@
                 "name": "09-PID copy",
                 "resourceId": "/09-PID copy"
             }
+        },
+        {
+            "name": "50-stepper_motor",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "50-stepper_motor",
+                "resourceId": "/50-stepper_motor"
+            }
+        },
+        {
+            "name": "example15_step_motor_2--example",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "example15_step_motor_2--example",
+                "resourceId": "/example15_step_motor_2--example"
+            }
+        },
+        {
+            "name": "51-with_k230_uart",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "51-with_k230_uart",
+                "resourceId": "/51-with_k230_uart"
+            }
+        },
+        {
+            "name": "53-uart_controlled",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "53-uart_controlled",
+                "resourceId": "/53-uart_controlled"
+            }
+        },
+        {
+            "name": "54-added_light_lose_cotrol",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "54-added_light_lose_cotrol",
+                "resourceId": "/54-added_light_lose_cotrol"
+            }
+        },
+        {
+            "name": "14-Blue_Serial",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "14-Blue_Serial",
+                "resourceId": "/14-Blue_Serial"
+            }
+        },
+        {
+            "name": "15--buzzer",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "15--buzzer",
+                "resourceId": "/15--buzzer"
+            }
+        },
+        {
+            "name": "10-02-GraySensor copy",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "10-02-GraySensor copy",
+                "resourceId": "/10-02-GraySensor copy"
+            }
+        },
+        {
+            "name": "06-2key",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "06-2key",
+                "resourceId": "/06-2key"
+            }
+        },
+        {
+            "name": "16--package",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "16--package",
+                "resourceId": "/16--package"
+            }
+        },
+        {
+            "name": "ICM42688",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "ICM42688",
+                "resourceId": "/ICM42688"
+            }
         }
     ]
 }

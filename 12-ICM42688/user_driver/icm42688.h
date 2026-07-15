@@ -128,7 +128,7 @@ https://store.invensense.com/datasheets/invensense/DS-ICM-42688v1-2.pdf
 #define ICM42688_OFFSET_USER7              0x7E
 #define ICM42688_OFFSET_USER8              0x7F
 
-#define ICM42688_ADDRESS                   0x69   // Address of ICM42688 accel/gyro when ADO = HIGH
+#define ICM42688_ADDRESS                   0x69   // AD0 low: 0x68; AD0 high: 0x69
 
 
 #define AFS_2G  0x03

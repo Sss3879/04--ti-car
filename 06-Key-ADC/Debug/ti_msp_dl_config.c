@@ -96,28 +96,21 @@ SYSCONFIG_WEAK void SYSCFG_DL_GPIO_init(void)
     DL_GPIO_initPeripheralInputFunction(
         GPIO_Serial_IOMUX_RX, GPIO_Serial_IOMUX_RX_FUNC);
 
-    DL_GPIO_initDigitalOutput(LED_LED1_IOMUX);
-
-    DL_GPIO_initDigitalOutput(LED_LED0_IOMUX);
-
     DL_GPIO_initDigitalInputFeatures(Key_Key1_IOMUX,
 		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_PULL_DOWN,
 		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
 
-    DL_GPIO_initDigitalInputFeatures(Key_Key2_IOMUX,
-		 DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_PULL_DOWN,
-		 DL_GPIO_HYSTERESIS_DISABLE, DL_GPIO_WAKEUP_DISABLE);
+    DL_GPIO_initDigitalOutput(LED_LED1_IOMUX);
 
-    DL_GPIO_clearPins(LED_PORT, LED_LED1_PIN |
+    DL_GPIO_initDigitalOutput(LED_LED0_IOMUX);
+
+    DL_GPIO_clearPins(GPIOA, LED_LED1_PIN |
 		LED_LED0_PIN);
-    DL_GPIO_enableOutput(LED_PORT, LED_LED1_PIN |
+    DL_GPIO_enableOutput(GPIOA, LED_LED1_PIN |
 		LED_LED0_PIN);
-    DL_GPIO_setLowerPinsPolarity(Key_PORT, DL_GPIO_PIN_6_EDGE_RISE |
-		DL_GPIO_PIN_7_EDGE_RISE);
-    DL_GPIO_clearInterruptStatus(Key_PORT, Key_Key1_PIN |
-		Key_Key2_PIN);
-    DL_GPIO_enableInterrupt(Key_PORT, Key_Key1_PIN |
-		Key_Key2_PIN);
+    DL_GPIO_setUpperPinsPolarity(GPIOA, DL_GPIO_PIN_24_EDGE_RISE);
+    DL_GPIO_clearInterruptStatus(GPIOA, Key_Key1_PIN);
+    DL_GPIO_enableInterrupt(GPIOA, Key_Key1_PIN);
 
 }
 

@@ -206,12 +206,14 @@ float bsp_Icm42688GetGres(uint8_t Gscale)
 int8_t bsp_Icm42688RegCfg(void)
 {
     uint8_t reg_val = 0;
-    /* 读取 who am i 寄存器 */
+    /* 选择 Bank 0，并通过 DEVICE_CONFIG 执行软件复位。 */
+    icm42688_write_reg(ICM42688_REG_BANK_SEL, 0x00);
+    icm42688_write_reg(ICM42688_DEVICE_CONFIG, 0x01);
+    ICM42688DelayMs(2);
+
+    /* 软件复位完成后再读取器件 ID。 */
     reg_val = icm42688_read_reg(ICM42688_WHO_AM_I);
-		printf("reg_val:%d\n",reg_val);
-    icm42688_write_reg(ICM42688_REG_BANK_SEL, 0); //设置bank 0区域寄存器
-    icm42688_write_reg(ICM42688_REG_BANK_SEL, 0x01); //软复位传感器
-    ICM42688DelayMs(100);
+		printf("ICM42688 WHO_AM_I: 0x%02X\r\n", reg_val);
 
 
     if(reg_val == ICM42688_ID)

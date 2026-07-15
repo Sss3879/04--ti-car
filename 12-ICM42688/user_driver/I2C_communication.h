@@ -67,7 +67,9 @@ typedef enum {
 
 extern I2cControllerStatus_t gI2cControllerStatus;
 
-extern void I2C_WriteReg(uint8_t addr, uint8_t reg_addr, uint8_t *reg_data, uint8_t count);
-extern void I2C_ReadReg(uint8_t addr, uint8_t reg_addr, uint8_t *reg_data, uint8_t count);
+extern bool I2C_WriteReg(uint8_t addr, uint8_t reg_addr,
+                         const uint8_t *reg_data, uint8_t count);
+extern bool I2C_ReadReg(uint8_t addr, uint8_t reg_addr,
+                        uint8_t *reg_data, uint8_t count);
 
 #endif /* I2C_COMMUNICATION_H_ */

@@ -1,0 +1,29 @@
+# Build outputs
+Debug/
+Release/
+*.o
+*.obj
+*.out
+*.map
+*.hex
+*.bin
+*.elf
+*_linkInfo.xml
+
+# Clangd cache
+.clangd/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ZIP files (optional, uncomment if you don't want to push zips)
+# *.zip

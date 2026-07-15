@@ -161,9 +161,16 @@ int main(void)
     SYSCFG_DL_init();
 
     printf("OK");
+
+    //     uint32_t status;
+
+    // status = DL_I2C_getControllerStatus(I2C_0_INST);
+
+    // printf("I2C STATUS = %lx\r\n", status);
+
 	IMU_init();
     TimeA1_Init();
-    delay_ms(20);
+    delay_ms(200);
 
     while (1)
     {

@@ -39,19 +39,27 @@ int main(void)
     NVIC_EnableIRQ(Serial_INST_INT_IRQN);
     NVIC_EnableIRQ(Key_INT_IRQN);  
 
-    DL_ADC12_enableConversions(POT_INST);
+    // DL_ADC12_enableConversions(POT_INST);
 
     char buffer[64];
+    snprintf(buffer, sizeof(buffer), "11\r\n");
+    UART_send_string(Serial_INST, buffer);
     while(1)
     {
-        DL_ADC12_startConversion(POT_INST);
-        delay_ms(100);
-        uint16_t adc_value = DL_ADC12_getMemResult(POT_INST,POT_ADCMEM_0);
-        snprintf(buffer, sizeof(buffer), "ADC Value: %u\r\n", adc_value);
-        UART_send_string(Serial_INST, buffer);
-        OLED_ShowString(0, 0,(u8*) buffer, 16);
-        OLED_Refresh();
+        // DL_ADC12_startConversion(POT_INST);
+        // delay_ms(100);
+        // uint16_t adc_value = DL_ADC12_getMemResult(POT_INST,POT_ADCMEM_0);
+        // snprintf(buffer, sizeof(buffer), "ADC Value: %u\r\n", adc_value);
+        // // UART_send_string(Serial_INST, buffer);
+        // OLED_ShowString(0, 0,(u8*) buffer, 16);
+        // OLED_Refresh();
 
+        // if(status==0)
+        // {
+        //     snprintf(buffer, sizeof(buffer), "nono\r\n");
+        //     UART_send_string(Serial_INST, buffer);
+        //     status=0;
+        // }
         if(status==1)
         {
             snprintf(buffer, sizeof(buffer), "Key1 Pressed\r\n");
@@ -77,12 +85,12 @@ void GROUP1_IRQHandler()
     {
     case Key_Key1_IIDX:
         /* code */
-        status = (status + 1) % 3;
+        status = 1;
         break;
-    case Key_Key2_IIDX:
-        status = (status + 3 -1) % 3;
-        /* code */
-        break;
+    // case Key_Key2_IIDX:
+    //     status = (status + 3 -1) % 3;
+    //     /* code */
+    //     break;
     
     default:
         break;

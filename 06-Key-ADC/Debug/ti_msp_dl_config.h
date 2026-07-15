@@ -133,6 +133,16 @@ extern "C" {
 
 
 
+/* Port definition for Pin Group Key */
+#define Key_PORT                                                         (GPIOA)
+
+/* Defines for Key1: GPIOA.24 with pinCMx 54 on package pin 25 */
+// pins affected by this interrupt request:["Key1"]
+#define Key_INT_IRQN                                            (GPIOA_INT_IRQn)
+#define Key_INT_IIDX                            (DL_INTERRUPT_GROUP1_IIDX_GPIOA)
+#define Key_Key1_IIDX                                       (DL_GPIO_IIDX_DIO24)
+#define Key_Key1_PIN                                            (DL_GPIO_PIN_24)
+#define Key_Key1_IOMUX                                           (IOMUX_PINCM54)
 /* Port definition for Pin Group LED */
 #define LED_PORT                                                         (GPIOA)
 
@@ -142,20 +152,6 @@ extern "C" {
 /* Defines for LED0: GPIOA.14 with pinCMx 36 on package pin 7 */
 #define LED_LED0_PIN                                            (DL_GPIO_PIN_14)
 #define LED_LED0_IOMUX                                           (IOMUX_PINCM36)
-/* Port definition for Pin Group Key */
-#define Key_PORT                                                         (GPIOB)
-
-/* Defines for Key1: GPIOB.6 with pinCMx 23 on package pin 58 */
-// pins affected by this interrupt request:["Key1","Key2"]
-#define Key_INT_IRQN                                            (GPIOB_INT_IRQn)
-#define Key_INT_IIDX                            (DL_INTERRUPT_GROUP1_IIDX_GPIOB)
-#define Key_Key1_IIDX                                        (DL_GPIO_IIDX_DIO6)
-#define Key_Key1_PIN                                             (DL_GPIO_PIN_6)
-#define Key_Key1_IOMUX                                           (IOMUX_PINCM23)
-/* Defines for Key2: GPIOB.7 with pinCMx 24 on package pin 59 */
-#define Key_Key2_IIDX                                        (DL_GPIO_IIDX_DIO7)
-#define Key_Key2_PIN                                             (DL_GPIO_PIN_7)
-#define Key_Key2_IOMUX                                           (IOMUX_PINCM24)
 
 
 /* clang-format on */

@@ -44,6 +44,113 @@ uint32_t gRxLen, gRxCount;
 /* I2C status */
 I2cControllerStatus_t gI2cControllerStatus;
 
+#define I2C_POLL_TIMEOUT (100000U)
+
+static void I2C_RecoverController(void)
+{
+    DL_I2C_flushControllerTXFIFO(I2C_0_INST);
+    DL_I2C_flushControllerRXFIFO(I2C_0_INST);
+    DL_I2C_resetControllerTransfer(I2C_0_INST);
+}
+
+static bool I2C_WaitForIdle(void)
+{
+    uint32_t timeout = I2C_POLL_TIMEOUT;
+    while (!(DL_I2C_getControllerStatus(I2C_0_INST) &
+             DL_I2C_CONTROLLER_STATUS_IDLE)) {
+        if (--timeout == 0U) {
+            I2C_RecoverController();
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool I2C_WaitForBusRelease(void)
+{
+    uint32_t timeout = I2C_POLL_TIMEOUT;
+    while (DL_I2C_getControllerStatus(I2C_0_INST) &
+           DL_I2C_CONTROLLER_STATUS_BUSY_BUS) {
+        if (--timeout == 0U) {
+            I2C_RecoverController();
+            return false;
+        }
+    }
+    return I2C_WaitForIdle();
+}
+
+static bool I2C_WaitForRxData(void)
+{
+    uint32_t timeout = I2C_POLL_TIMEOUT;
+    while (DL_I2C_isControllerRXFIFOEmpty(I2C_0_INST)) {
+        if (--timeout == 0U) {
+            I2C_RecoverController();
+            return false;
+        }
+    }
+    return true;
+}
+
+/* Reference communication sequence:
+ * IDLE -> prefill FIFO -> start transfer -> refill FIFO -> BUSY clear -> IDLE. */
+static bool I2C_Send(uint8_t addr, const uint8_t *data, uint16_t length)
+{
+    uint16_t sent;
+
+    if ((data == NULL) || (length == 0U) || !I2C_WaitForIdle()) {
+        return false;
+    }
+
+    DL_I2C_flushControllerTXFIFO(I2C_0_INST);
+    sent = DL_I2C_fillControllerTXFIFO(I2C_0_INST, data, length);
+    DL_I2C_startControllerTransfer(I2C_0_INST, addr,
+        DL_I2C_CONTROLLER_DIRECTION_TX, length);
+
+    while (sent < length) {
+        uint32_t timeout = I2C_POLL_TIMEOUT;
+        while (DL_I2C_isControllerTXFIFOFull(I2C_0_INST)) {
+            if (--timeout == 0U) {
+                I2C_RecoverController();
+                return false;
+            }
+        }
+        DL_I2C_transmitControllerData(I2C_0_INST, data[sent++]);
+    }
+
+    if (!I2C_WaitForBusRelease()) {
+        return false;
+    }
+    delay_cycles(1000);
+    return true;
+}
+
+/* IDLE -> start RX -> drain FIFO -> BUSY clear -> IDLE. */
+static bool I2C_Receive(uint8_t addr, uint8_t *data, uint16_t length)
+{
+    uint16_t i;
+
+    if ((data == NULL) || (length == 0U) || !I2C_WaitForIdle()) {
+        return false;
+    }
+
+    DL_I2C_flushControllerRXFIFO(I2C_0_INST);
+    DL_I2C_startControllerTransfer(I2C_0_INST, addr,
+        DL_I2C_CONTROLLER_DIRECTION_RX, length);
+
+    for (i = 0; i < length; i++) {
+        if (!I2C_WaitForRxData()) {
+            return false;
+        }
+        data[i] = DL_I2C_receiveControllerData(I2C_0_INST);
+    }
+
+    if (!I2C_WaitForBusRelease()) {
+        return false;
+    }
+    delay_cycles(1000);
+    return true;
+}
+
 //************Array copy **********************
 void CopyArray(uint8_t *source, uint8_t *dest, uint8_t count)
 {
@@ -54,79 +161,34 @@ void CopyArray(uint8_t *source, uint8_t *dest, uint8_t count)
 }
 
 //************I2C write register **********************
-void I2C_WriteReg(uint8_t addr, uint8_t reg_addr, uint8_t *reg_data, uint8_t count)
+bool I2C_WriteReg(uint8_t addr, uint8_t reg_addr,
+                  const uint8_t *reg_data, uint8_t count)
 {
-    unsigned char I2Ctxbuff[8] = {0x00};
+    uint8_t tx_data[8] = {0};
+    uint8_t i;
 
-    I2Ctxbuff[0] = reg_addr;
-    unsigned char i, j = 1;
-
-    for (i = 0; i < count; i++) {
-        I2Ctxbuff[j] = reg_data[i];
-        j++;
+    if ((reg_data == NULL) || (count == 0U) || (count > 7U)) {
+        return false;
     }
 
-    //    DL_I2C_flushControllerTXFIFO(I2C_0_INST);
-    DL_I2C_fillControllerTXFIFO(I2C_0_INST, &I2Ctxbuff[0], count + 1);
-
-    /* Wait for I2C to be Idle */
-    while (!(DL_I2C_getControllerStatus(I2C_0_INST) &
-             DL_I2C_CONTROLLER_STATUS_IDLE))
-        ;
-
-    DL_I2C_startControllerTransfer(I2C_0_INST, addr,
-        DL_I2C_CONTROLLER_DIRECTION_TX, count + 1);
-
-    while (DL_I2C_getControllerStatus(I2C_0_INST) &
-           DL_I2C_CONTROLLER_STATUS_BUSY_BUS)
-        ;
-    /* Wait for I2C to be Idle */
-    while (!(DL_I2C_getControllerStatus(I2C_0_INST) &
-             DL_I2C_CONTROLLER_STATUS_IDLE))
-        ;
-
-    //Avoid BQ769x2 to stretch the SCLK too long and generate a timeout interrupt at 400kHz because of low power mode
-    // if(DL_I2C_getRawInterruptStatus(I2C_0_INST,DL_I2C_INTERRUPT_CONTROLLER_CLOCK_TIMEOUT))
-    // {
-    //     DL_I2C_flushControllerTXFIFO(I2C_0_INST);
-    //     DL_I2C_clearInterruptStatus(I2C_0_INST,DL_I2C_INTERRUPT_CONTROLLER_CLOCK_TIMEOUT);
-    //     I2C_WriteReg(reg_addr, reg_data, count);
-    // }
-    DL_I2C_flushControllerTXFIFO(I2C_0_INST);
+    tx_data[0] = reg_addr;
+    for (i = 0; i < count; i++) {
+        tx_data[i + 1U] = reg_data[i];
+    }
+    return I2C_Send(addr, tx_data, (uint16_t)count + 1U);
 }
 
 //************I2C read register **********************
-void I2C_ReadReg(uint8_t addr, uint8_t reg_addr, uint8_t *reg_data, uint8_t count)
+bool I2C_ReadReg(uint8_t addr, uint8_t reg_addr, uint8_t *reg_data, uint8_t count)
 {
-    DL_I2C_fillControllerTXFIFO(I2C_0_INST, &reg_addr, count);
-
-    /* Wait for I2C to be Idle */
-    while (!(DL_I2C_getControllerStatus(I2C_0_INST) &
-             DL_I2C_CONTROLLER_STATUS_IDLE))
-        ;
-
-    DL_I2C_startControllerTransfer(
-        I2C_0_INST, addr, DL_I2C_CONTROLLER_DIRECTION_TX, 1);
-
-    while (DL_I2C_getControllerStatus(I2C_0_INST) &
-           DL_I2C_CONTROLLER_STATUS_BUSY_BUS)
-        ;
-    /* Wait for I2C to be Idle */
-    while (!(DL_I2C_getControllerStatus(I2C_0_INST) &
-             DL_I2C_CONTROLLER_STATUS_IDLE))
-        ;
-
-    DL_I2C_flushControllerTXFIFO(I2C_0_INST);
-
-    /* Send a read request to Target */
-    DL_I2C_startControllerTransfer(
-        I2C_0_INST, addr, DL_I2C_CONTROLLER_DIRECTION_RX, count);
-
-    for (uint8_t i = 0; i < count; i++) {
-        while (DL_I2C_isControllerRXFIFOEmpty(I2C_0_INST))
-            ;
-        reg_data[i] = DL_I2C_receiveControllerData(I2C_0_INST);
+    if ((reg_data == NULL) || (count == 0U)) {
+        return false;
     }
+    /* The register-select phase transmits exactly one byte. */
+    if (!I2C_Send(addr, &reg_addr, 1U)) {
+        return false;
+    }
+    return I2C_Receive(addr, reg_data, count);
 }
 
 void I2C_0_INST_IRQHandler(void)

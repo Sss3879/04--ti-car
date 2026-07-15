@@ -44,10 +44,10 @@ int main(void)
 
     while (1) {
         delay_ms(500);
-        DL_GPIO_clearPins(LED_PORT, LED_LED0_PIN);
-        DL_GPIO_clearPins(LED_PORT, LED_LED1_PIN);
+        DL_GPIO_clearPins(LED_PORT, LED_LED0_PIN);//板载LED PA14
+        DL_GPIO_clearPins(LED_PORT, LED_LED1_PIN);//PA15
         delay_ms(500);
-        DL_GPIO_setPins(LED_PORT, LED_LED0_PIN);
-        DL_GPIO_setPins(LED_PORT, LED_LED1_PIN);
+        DL_GPIO_setPins(LED_PORT, LED_LED0_PIN);//板载LED PA14
+        DL_GPIO_setPins(LED_PORT, LED_LED1_PIN);//PA15
     }
 }

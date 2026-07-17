@@ -7,6 +7,7 @@ SHELL = cmd.exe
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../user_driver/ADC.c \
+../user_driver/BlueSerial.c \
 ../user_driver/No_Mcu_Ganv_Grayscale_Sensor.c \
 ../user_driver/PID.c \
 ../user_driver/Serial.c \
@@ -17,6 +18,7 @@ C_SRCS += \
 
 C_DEPS += \
 ./user_driver/ADC.d \
+./user_driver/BlueSerial.d \
 ./user_driver/No_Mcu_Ganv_Grayscale_Sensor.d \
 ./user_driver/PID.d \
 ./user_driver/Serial.d \
@@ -27,6 +29,7 @@ C_DEPS += \
 
 OBJS += \
 ./user_driver/ADC.o \
+./user_driver/BlueSerial.o \
 ./user_driver/No_Mcu_Ganv_Grayscale_Sensor.o \
 ./user_driver/PID.o \
 ./user_driver/Serial.o \
@@ -37,6 +40,7 @@ OBJS += \
 
 OBJS__QUOTED += \
 "user_driver\ADC.o" \
+"user_driver\BlueSerial.o" \
 "user_driver\No_Mcu_Ganv_Grayscale_Sensor.o" \
 "user_driver\PID.o" \
 "user_driver\Serial.o" \
@@ -47,6 +51,7 @@ OBJS__QUOTED += \
 
 C_DEPS__QUOTED += \
 "user_driver\ADC.d" \
+"user_driver\BlueSerial.d" \
 "user_driver\No_Mcu_Ganv_Grayscale_Sensor.d" \
 "user_driver\PID.d" \
 "user_driver\Serial.d" \
@@ -57,6 +62,7 @@ C_DEPS__QUOTED += \
 
 C_SRCS__QUOTED += \
 "../user_driver/ADC.c" \
+"../user_driver/BlueSerial.c" \
 "../user_driver/No_Mcu_Ganv_Grayscale_Sensor.c" \
 "../user_driver/PID.c" \
 "../user_driver/Serial.c" \

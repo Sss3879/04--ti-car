@@ -19,7 +19,7 @@
 
 extern PID_t Motor_Left;
 extern PID_t Motor_Right;
-
+extern PID_t Angle_PID;
 //#include "pid_demo.h"
 
 /* VOFA数据缓存数组 */
@@ -71,7 +71,19 @@ void vofa_draw_graphical(uint8_t _dataflag)
                         Motor_Right.Target, Motor_Right.Actual, Motor_Right.Out,
                         Motor_Right.Kp, Motor_Right.Ki, Motor_Right.Kd);
             break;
-            
+        case 3:
+            Serial_Printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
+                        // 左轮参数
+                        Motor_Left.Target, Motor_Left.Actual, Motor_Left.Out,
+                      
+                        // 右轮参数
+                        Motor_Right.Target, Motor_Right.Actual, Motor_Right.Out,
+                        
+                        //角度环
+                        Angle_PID.Target, Angle_PID.Actual, Angle_PID.Out,
+                        Angle_PID.Kp, Angle_PID.Ki, Angle_PID.Kd
+                        );
+            break;
         default:
             break;
     }
@@ -274,6 +286,29 @@ void vofa_parse_packet(char *packet)
         else if (cmd1 == 'T')
         {
             Motor_Right.Target = value;
+            Serial_Printf("Set Right Target = %.3f\r\n", value);
+        }
+    }
+    else if (cmd2 == '1')   // 右轮 PID
+    {
+        if (cmd1 == 'P')
+        {
+            Angle_PID.Kp = value;
+            Serial_Printf("Set Right Kp = %.3f\r\n", value);
+        }
+        else if (cmd1 == 'I')
+        {
+            Angle_PID.Ki = value;
+            Serial_Printf("Set Right Ki = %.3f\r\n", value);
+        }
+        else if (cmd1 == 'D')
+        {
+            Angle_PID.Kd = value;
+            Serial_Printf("Set Right Kd = %.3f\r\n", value);
+        }
+        else if (cmd1 == 'T')
+        {
+            Angle_PID.Target = value;
             Serial_Printf("Set Right Target = %.3f\r\n", value);
         }
     }

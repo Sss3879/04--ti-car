@@ -11,6 +11,7 @@
 #include "motor.h"
 #include "PID.h"
 #include "uart_vofa.h"
+#include "BlueSerial.h"
 #include "No_Mcu_Ganv_Grayscale_Sensor_Config.h"
 volatile  uint8_t status=0;
 extern float speed_1;
@@ -47,8 +48,8 @@ PID_t Motor_Right={
 
 // ======== 灰度传感器变量 ========
 	// 黑白校准值(实测标定: 黑≈330, 白≈1600~3000)
-	unsigned short white[8] = {1315,1300,1331,1347,1609,1604,1739,1746   };
-	unsigned short black[8] = {350,350,350,350,350,350  };
+	unsigned short white[8] = {871,874,1437,1436,1444,1439,1611,1617   };
+	unsigned short black[8] = {237,235,245,250,250,248,250,252  };
 unsigned short Anolog[8]  = {0};
 unsigned short Normal[8]  = {0};
 
@@ -59,12 +60,12 @@ unsigned char Digtal;
 int16_t Line_Error = 0;
 uint8_t Line_LostFlag = 0;
 
-int16_t BaseSpeed = 80;
+int16_t BaseSpeed = 120;
 float Line_Kp = 0.03f;
 
 
-#define SPEED_MAX 120
-#define SPEED_MIN -120
+#define SPEED_MAX 180
+#define SPEED_MIN -180
 
 float Limit_Float(float value, float min, float max)
 {
@@ -87,13 +88,13 @@ void Car_LineControl(void)
 
     Turn = (int16_t)(Line_Kp * Line_Error);
 
-    if (Turn > 15)
+    if (Turn > 50)
     {
-        Turn = 15;
+        Turn = 50;
     }
-    else if (Turn < -15)
+    else if (Turn < -50)
     {
-        Turn = -15;
+        Turn = -50;
     }
 
     Motor_Left.Target  = BaseSpeed + Turn;
@@ -126,7 +127,11 @@ int main(void)
 
     Motor_Init();
 
+    BlueSerial_Init();
+    NVIC_EnableIRQ(Blue_Serial_INST_INT_IRQN);
+
     Serial_Printf("--- GraySensor Start ---\r\n");
+    BlueSerial_Printf("--- GraySensor Start ---\r\n");
 
     while(1)
     {
@@ -155,16 +160,23 @@ int main(void)
             Normal[0], Normal[1], Normal[2], Normal[3],
             Normal[4], Normal[5], Normal[6], Normal[7]);
 
-        // //灰度巡线任务
-        // Car_LineControl();
+        // ======== 蓝牙串口输出 ========
+        BlueSerial_Printf("[Gray D:%d%d%d%d%d%d%d%d A:%d,%d,%d,%d,%d,%d,%d,%d]\r\n",
+            (Digtal>>0)&1, (Digtal>>1)&1, (Digtal>>2)&1, (Digtal>>3)&1,
+            (Digtal>>4)&1, (Digtal>>5)&1, (Digtal>>6)&1, (Digtal>>7)&1,
+            Anolog[0], Anolog[1], Anolog[2], Anolog[3],
+            Anolog[4], Anolog[5], Anolog[6], Anolog[7]);
 
-        // Serial_Printf("%d,%d,%.2f,%.2f,%.2f,%.2f\r\n",
-        //                 Line_Error,
-        //                 Line_LostFlag,
-        //                 Motor_Left.Target,
-        //                 Motor_Right.Target,
-        //                 Motor_Left.Actual,
-        //                 Motor_Right.Actual);
+        //灰度巡线任务
+        Car_LineControl();
+
+        Serial_Printf("%d,%d,%.2f,%.2f,%.2f,%.2f\r\n",
+                        Line_Error,
+                        Line_LostFlag,
+                        Motor_Left.Target,
+                        Motor_Right.Target,
+                        Motor_Left.Actual,
+                        Motor_Right.Actual);
     
 
         // ======== VOFA+ PID调试（可注释上面Serial_Printf，改用这个看波形） ========

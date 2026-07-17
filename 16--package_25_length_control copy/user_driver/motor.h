@@ -14,7 +14,6 @@
 #define MAX_ENCODER_COUNT 200
 
 
-
 void Motor_Init(void);
 void Motor_SetDuty(uint8_t motor, int32_t duty);
 

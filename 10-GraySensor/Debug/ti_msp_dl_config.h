@@ -145,6 +145,22 @@ bool SYSCFG_DL_SYSCTL_SYSPLL_init(void);
 #define Serial_BAUD_RATE                                                (115200)
 #define Serial_IBRD_40_MHZ_115200_BAUD                                      (21)
 #define Serial_FBRD_40_MHZ_115200_BAUD                                      (45)
+/* Defines for Blue_Serial */
+#define Blue_Serial_INST                                                   UART3
+#define Blue_Serial_INST_FREQUENCY                                      80000000
+#define Blue_Serial_INST_IRQHandler                             UART3_IRQHandler
+#define Blue_Serial_INST_INT_IRQN                                 UART3_INT_IRQn
+#define GPIO_Blue_Serial_RX_PORT                                           GPIOA
+#define GPIO_Blue_Serial_TX_PORT                                           GPIOA
+#define GPIO_Blue_Serial_RX_PIN                                   DL_GPIO_PIN_25
+#define GPIO_Blue_Serial_TX_PIN                                   DL_GPIO_PIN_26
+#define GPIO_Blue_Serial_IOMUX_RX                                (IOMUX_PINCM55)
+#define GPIO_Blue_Serial_IOMUX_TX                                (IOMUX_PINCM59)
+#define GPIO_Blue_Serial_IOMUX_RX_FUNC                 IOMUX_PINCM55_PF_UART3_RX
+#define GPIO_Blue_Serial_IOMUX_TX_FUNC                 IOMUX_PINCM59_PF_UART3_TX
+#define Blue_Serial_BAUD_RATE                                             (9600)
+#define Blue_Serial_IBRD_80_MHZ_9600_BAUD                                  (520)
+#define Blue_Serial_FBRD_80_MHZ_9600_BAUD                                   (53)
 
 
 
@@ -280,6 +296,7 @@ void SYSCFG_DL_PWM1_init(void);
 void SYSCFG_DL_MOTOR_PID_init(void);
 void SYSCFG_DL_OLED_init(void);
 void SYSCFG_DL_Serial_init(void);
+void SYSCFG_DL_Blue_Serial_init(void);
 void SYSCFG_DL_POT_init(void);
 void SYSCFG_DL_ADC12_0_init(void);
 void SYSCFG_DL_VREF_init(void);

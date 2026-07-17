@@ -28,6 +28,7 @@ const TIMER  = scripting.addModule("/ti/driverlib/TIMER", {}, false);
 const TIMER1 = TIMER.addInstance();
 const UART   = scripting.addModule("/ti/driverlib/UART", {}, false);
 const UART1  = UART.addInstance();
+const UART2  = UART.addInstance();
 const VREF   = scripting.addModule("/ti/driverlib/VREF");
 
 /**
@@ -211,6 +212,20 @@ UART1.rxPinConfig.onlyInternalResistor = scripting.forceWrite(false);
 UART1.rxPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
 UART1.rxPinConfig.$name                = "ti_driverlib_gpio_GPIOPinGeneric3";
 
+UART2.$name                            = "Blue_Serial";
+UART2.enabledInterrupts                = ["RX"];
+UART2.peripheral.$assign               = "UART3";
+UART2.peripheral.rxPin.$assign         = "PA25";
+UART2.txPinConfig.$name                = "ti_driverlib_gpio_GPIOPinGeneric9";
+UART2.txPinConfig.direction            = scripting.forceWrite("OUTPUT");
+UART2.txPinConfig.hideOutputInversion  = scripting.forceWrite(false);
+UART2.txPinConfig.onlyInternalResistor = scripting.forceWrite(false);
+UART2.txPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
+UART2.rxPinConfig.$name                = "ti_driverlib_gpio_GPIOPinGeneric10";
+UART2.rxPinConfig.hideOutputInversion  = scripting.forceWrite(false);
+UART2.rxPinConfig.onlyInternalResistor = scripting.forceWrite(false);
+UART2.rxPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
+
 VREF.peripheral.vrefPosPin.$assign = "PA23";
 VREF.vrefPosPinConfig.$name        = "ti_driverlib_gpio_GPIOPinGeneric5";
 
@@ -227,4 +242,5 @@ Board.peripheral.swclkPin.$suggestSolution     = "PA20";
 Board.peripheral.swdioPin.$suggestSolution     = "PA19";
 PWM1.peripheral.ccp0Pin.$suggestSolution       = "PA12";
 PWM1.peripheral.ccp1Pin.$suggestSolution       = "PA13";
+UART2.peripheral.txPin.$suggestSolution        = "PA26";
 VREF.peripheral.$suggestSolution               = "VREF";

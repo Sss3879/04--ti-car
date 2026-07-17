@@ -82,7 +82,7 @@ extern volatile uint32_t motor_pid_count;
 
 char buffer[64];
 float ypr[3];
-uint8_t ICM42688_UpdateFlag = 0;
+uint8_t Flag_20ms = 0;
 RunMode_t RunMode = MODE_STOP;
 
 int16_t BaseSpeed = 200;
@@ -106,8 +106,8 @@ uint8_t FindLine_Count = 0;
 
 /* ========================== 灰度传感器 ========================== */
 	/* 与 10-GraySensor 当前实测标定值保持一致。 */
-	unsigned short white[8] = {1315,1300,1331,1347,1609,1604,1739,1746   };
-	unsigned short black[8] = {350,350,350,350,350,350  };
+	unsigned short white[8] = {871,874,1437,1436,1444,1439,1611,1617   };
+	unsigned short black[8] = {237,235,245,250,250,248,250,252  };
 unsigned short Anolog[8] = {0};
 unsigned short Normal[8] = {0};
 No_MCU_Sensor sensor;
@@ -360,16 +360,12 @@ int main(void)
     while (1)
     {
         /* ---------- IMU 更新 + 控制输出 + 蓝牙输出 (20ms) ---------- */
-        if (ICM42688_UpdateFlag == 1)
+        if (Flag_20ms == 1)
         {
-            ICM42688_UpdateFlag = 0;
+            Flag_20ms = 0;
+            IMU_getYawPitchRoll(ypr);       // I2C读陀螺仪，放主循环不阻塞中断
 
-            /* 与 10-GraySensor 一致：控制计算前先刷新灰度数据。 */
-            No_Mcu_Ganv_Sensor_Task_Without_tick(&sensor);
-            Digtal = Get_Digtal_For_User(&sensor);
-            Get_Anolog_Value(&sensor, Anolog);
-            Get_Normalize_For_User(&sensor, Normal);
-
+            /* 灰度数据由 Road_Task/Car_LineControl 内部刷新，此处不重复读取 */
             switch (RunMode)
             {
                 case MODE_STOP:
@@ -421,65 +417,65 @@ int main(void)
         }
 
         /* -------------- */
-        if (Serial_RxFlag == 1)
-        {
-            vofa_parse_packet(Serial_RxPacket);
-            Serial_RxFlag = 0;
-        }
+        // if (Serial_RxFlag == 1)
+        // {
+        //     vofa_parse_packet(Serial_RxPacket);
+        //     Serial_RxFlag = 0;
+        // }
 
-        /* ---------- 蓝牙命令 (UART3) ---------- */
-        if (BlueSerial_RxFlag == 1)
-        {
-            char *Tag = strtok(BlueSerial_RxPacket, ",");
-            if (Tag)
-            {
-                /* --- key,Stop,down --- */
-                if (strcmp(Tag, "key") == 0)
-                {
-                    char *Name   = strtok(NULL, ",");
-                    char *Action = strtok(NULL, ",");
-                    if (Name && Action && strcmp(Name, "Stop") == 0 && strcmp(Action, "down") == 0)
-                    {
-                        BaseSpeed = 0;
-                        Motor_Left.Target  = 0;
-                        Motor_Right.Target = 0;
-                    }
-                }
-                /* --- slider,Name,Value --- */
-                else if (strcmp(Tag, "slider") == 0)
-                {
-                    char *Name  = strtok(NULL, ",");
-                    char *Value = strtok(NULL, ",");
-                    if (Name && Value)
-                    {
-                             if (strcmp(Name, "AngleKp")   == 0) Angle_PID.Kp     = atof(Value);
-                        else if (strcmp(Name, "AngleKi")   == 0) Angle_PID.Ki     = atof(Value);
-                        else if (strcmp(Name, "AngleKd")   == 0) Angle_PID.Kd     = atof(Value);
-                        else if (strcmp(Name, "BaseSpeed") == 0) BaseSpeed        = atof(Value);
-                        else if (strcmp(Name, "LeftKp")    == 0) Motor_Left.Kp    = atof(Value);
-                        else if (strcmp(Name, "LeftKi")    == 0) Motor_Left.Ki    = atof(Value);
-                        else if (strcmp(Name, "LeftKd")    == 0) Motor_Left.Kd    = atof(Value);
-                        else if (strcmp(Name, "RightKp")   == 0) Motor_Right.Kp   = atof(Value);
-                        else if (strcmp(Name, "RightKi")   == 0) Motor_Right.Ki   = atof(Value);
-                        else if (strcmp(Name, "RightKd")   == 0) Motor_Right.Kd   = atof(Value);
-                    }
-                }
-                /* --- joystick,LH,LV,RH,RV --- */
-                else if (strcmp(Tag, "joystick") == 0)
-                {
-                    char *LH = strtok(NULL, ",");
-                    char *LV = strtok(NULL, ",");
-                    char *RH = strtok(NULL, ",");
-                    char *RV = strtok(NULL, ",");
-                    if (LH && LV && RH && RV)
-                    {
-                        BaseSpeed         = atoi(LV) / 5.0f;
-                        Angle_PID.Target  = atoi(RH) / 5.0f;
-                    }
-                }
-            }
-            BlueSerial_RxFlag = 0;
-        }
+        // /* ---------- 蓝牙命令 (UART3) ---------- */
+        // if (BlueSerial_RxFlag == 1)
+        // {
+        //     char *Tag = strtok(BlueSerial_RxPacket, ",");
+        //     if (Tag)
+        //     {
+        //         /* --- key,Stop,down --- */
+        //         if (strcmp(Tag, "key") == 0)
+        //         {
+        //             char *Name   = strtok(NULL, ",");
+        //             char *Action = strtok(NULL, ",");
+        //             if (Name && Action && strcmp(Name, "Stop") == 0 && strcmp(Action, "down") == 0)
+        //             {
+        //                 BaseSpeed = 0;
+        //                 Motor_Left.Target  = 0;
+        //                 Motor_Right.Target = 0;
+        //             }
+        //         }
+        //         /* --- slider,Name,Value --- */
+        //         else if (strcmp(Tag, "slider") == 0)
+        //         {
+        //             char *Name  = strtok(NULL, ",");
+        //             char *Value = strtok(NULL, ",");
+        //             if (Name && Value)
+        //             {
+        //                      if (strcmp(Name, "AngleKp")   == 0) Angle_PID.Kp     = atof(Value);
+        //                 else if (strcmp(Name, "AngleKi")   == 0) Angle_PID.Ki     = atof(Value);
+        //                 else if (strcmp(Name, "AngleKd")   == 0) Angle_PID.Kd     = atof(Value);
+        //                 else if (strcmp(Name, "BaseSpeed") == 0) BaseSpeed        = atof(Value);
+        //                 else if (strcmp(Name, "LeftKp")    == 0) Motor_Left.Kp    = atof(Value);
+        //                 else if (strcmp(Name, "LeftKi")    == 0) Motor_Left.Ki    = atof(Value);
+        //                 else if (strcmp(Name, "LeftKd")    == 0) Motor_Left.Kd    = atof(Value);
+        //                 else if (strcmp(Name, "RightKp")   == 0) Motor_Right.Kp   = atof(Value);
+        //                 else if (strcmp(Name, "RightKi")   == 0) Motor_Right.Ki   = atof(Value);
+        //                 else if (strcmp(Name, "RightKd")   == 0) Motor_Right.Kd   = atof(Value);
+        //             }
+        //         }
+        //         /* --- joystick,LH,LV,RH,RV --- */
+        //         else if (strcmp(Tag, "joystick") == 0)
+        //         {
+        //             char *LH = strtok(NULL, ",");
+        //             char *LV = strtok(NULL, ",");
+        //             char *RH = strtok(NULL, ",");
+        //             char *RV = strtok(NULL, ",");
+        //             if (LH && LV && RH && RV)
+        //             {
+        //                 BaseSpeed         = atoi(LV) / 5.0f;
+        //                 Angle_PID.Target  = atoi(RH) / 5.0f;
+        //             }
+        //         }
+        //     }
+        //     BlueSerial_RxFlag = 0;
+        // }
 
         /* ---------- 按键处理 ---------- */
         if (status == 1)              // Key1: 切换模式
@@ -516,8 +512,7 @@ void TIMER_0_INST_IRQHandler(void)
     switch (DL_TimerG_getPendingInterrupt(TIMER_0_INST))
     {
         case DL_TIMER_IIDX_ZERO:
-            IMU_getYawPitchRoll(ypr);
-            ICM42688_UpdateFlag = 1;
+            Flag_20ms = 1;
             break;
         default:
             break;
@@ -527,47 +522,52 @@ void TIMER_0_INST_IRQHandler(void)
 /* ---- GPIO 中断：编码器 + 按键 ---- */
 void GROUP1_IRQHandler(void)
 {
-    uint32_t gpioa = DL_GPIO_getPendingInterrupt(GPIOA);
-    uint32_t gpiob = DL_GPIO_getPendingInterrupt(GPIOB);
+    uint32_t iidx;
 
-    /* GPIOA: 编码器1 E1A=PA21 | Key1=PA24 | Key2=PA23 */
-    switch (gpioa)
+    /* GPIOA: 循环处理完所有挂起的中断 */
+    while ((iidx = DL_GPIO_getPendingInterrupt(GPIOA)) != 0)
     {
-        case Motor_E1A_IIDX:
-            if (DL_GPIO_readPins(Motor_E1A_PORT, Motor_E1A_PIN))
-            {
-                delay_cycles(100);
+        switch (iidx)
+        {
+            case Motor_E1A_IIDX:
                 if (DL_GPIO_readPins(Motor_E1A_PORT, Motor_E1A_PIN))
                 {
-                    if (DL_GPIO_readPins(Motor_E1B_PORT, Motor_E1B_PIN))
-                        Encoder1_Count--;
-                    else
-                        Encoder1_Count++;
+                    delay_cycles(100);
+                    if (DL_GPIO_readPins(Motor_E1A_PORT, Motor_E1A_PIN))
+                    {
+                        if (DL_GPIO_readPins(Motor_E1B_PORT, Motor_E1B_PIN))
+                            Encoder1_Count--;
+                        else
+                            Encoder1_Count++;
+                    }
                 }
-            }
-            break;
-        case Key_Key1_IIDX:
-            status = 1;   // 切换 STOP↔RECT
-            break;
-        case Key_Key2_IIDX:
-            status = 2;   // 紧急停止
-            break;
-        default:
-            break;
+                break;
+            case Key_Key1_IIDX:
+                status = 1;
+                break;
+            case Key_Key2_IIDX:
+                status = 2;
+                break;
+            default:
+                break;
+        }
     }
 
-    /* GPIOB: 编码器2 E2A=PB19 */
-    if (gpiob == Motor_E2A_IIDX)
+    /* GPIOB: 循环处理完所有挂起的中断 */
+    while ((iidx = DL_GPIO_getPendingInterrupt(GPIOB)) != 0)
     {
-        if (DL_GPIO_readPins(Motor_E2A_PORT, Motor_E2A_PIN))
+        if (iidx == Motor_E2A_IIDX)
         {
-            delay_cycles(100);
             if (DL_GPIO_readPins(Motor_E2A_PORT, Motor_E2A_PIN))
             {
-                if (DL_GPIO_readPins(Motor_E2B_PORT, Motor_E2B_PIN))
-                    Encoder2_Count--;
-                else
-                    Encoder2_Count++;
+                delay_cycles(100);
+                if (DL_GPIO_readPins(Motor_E2A_PORT, Motor_E2A_PIN))
+                {
+                    if (DL_GPIO_readPins(Motor_E2B_PORT, Motor_E2B_PIN))
+                        Encoder2_Count--;
+                    else
+                        Encoder2_Count++;
+                }
             }
         }
     }

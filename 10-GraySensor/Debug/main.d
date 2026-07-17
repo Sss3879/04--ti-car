@@ -90,6 +90,7 @@
  D:/00-pushing/07-ti/work/10-GraySensor/user_driver/motor.h \
  D:/00-pushing/07-ti/work/10-GraySensor/user_driver/PID.h \
  D:/00-pushing/07-ti/work/10-GraySensor/user_driver/uart_vofa.h \
+ D:/00-pushing/07-ti/work/10-GraySensor/user_driver/BlueSerial.h \
  D:/00-pushing/07-ti/work/10-GraySensor/user_driver/No_Mcu_Ganv_Grayscale_Sensor_Config.h \
  D:/00-pushing/07-ti/work/10-GraySensor/user_driver/ADC.h
 ti_msp_dl_config.h:
@@ -181,5 +182,6 @@ D:/00-pushing/07-ti/work/10-GraySensor/user_driver/Serial.h:
 D:/00-pushing/07-ti/work/10-GraySensor/user_driver/motor.h:
 D:/00-pushing/07-ti/work/10-GraySensor/user_driver/PID.h:
 D:/00-pushing/07-ti/work/10-GraySensor/user_driver/uart_vofa.h:
+D:/00-pushing/07-ti/work/10-GraySensor/user_driver/BlueSerial.h:
 D:/00-pushing/07-ti/work/10-GraySensor/user_driver/No_Mcu_Ganv_Grayscale_Sensor_Config.h:
 D:/00-pushing/07-ti/work/10-GraySensor/user_driver/ADC.h:

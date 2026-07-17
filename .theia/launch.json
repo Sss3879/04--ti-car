@@ -204,15 +204,6 @@
             }
         },
         {
-            "name": "10-02-GraySensor copy",
-            "type": "ccs-debug",
-            "request": "launch",
-            "projectInfo": {
-                "name": "10-02-GraySensor copy",
-                "resourceId": "/10-02-GraySensor copy"
-            }
-        },
-        {
             "name": "06-2key",
             "type": "ccs-debug",
             "request": "launch",
@@ -246,6 +237,24 @@
             "projectInfo": {
                 "name": "09-PID_++outmax",
                 "resourceId": "/09-PID_++outmax"
+            }
+        },
+        {
+            "name": "16--package_25_length_control-calibrate_length",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "16--package_25_length_control-calibrate_length",
+                "resourceId": "/16--package_25_length_control-calibrate_length"
+            }
+        },
+        {
+            "name": "16--package_25_length_control copy",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "16--package_25_length_control copy",
+                "resourceId": "/16--package_25_length_control copy"
             }
         }
     ]

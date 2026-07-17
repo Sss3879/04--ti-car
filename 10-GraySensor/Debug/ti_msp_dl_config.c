@@ -41,6 +41,7 @@
 #include "ti_msp_dl_config.h"
 
 DL_TimerA_backupConfig gMOTOR_PIDBackup;
+DL_UART_Main_backupConfig gBlue_SerialBackup;
 
 /*
  *  ======== SYSCFG_DL_init ========
@@ -56,6 +57,7 @@ SYSCONFIG_WEAK void SYSCFG_DL_init(void)
     SYSCFG_DL_MOTOR_PID_init();
     SYSCFG_DL_OLED_init();
     SYSCFG_DL_Serial_init();
+    SYSCFG_DL_Blue_Serial_init();
     SYSCFG_DL_POT_init();
     SYSCFG_DL_ADC12_0_init();
     SYSCFG_DL_VREF_init();
@@ -63,7 +65,7 @@ SYSCONFIG_WEAK void SYSCFG_DL_init(void)
     /* Ensure backup structures have no valid state */
 
 	gMOTOR_PIDBackup.backupRdy 	= false;
-
+	gBlue_SerialBackup.backupRdy 	= false;
 
 }
 /*
@@ -75,6 +77,7 @@ SYSCONFIG_WEAK bool SYSCFG_DL_saveConfiguration(void)
     bool retStatus = true;
 
 	retStatus &= DL_TimerA_saveConfiguration(MOTOR_PID_INST, &gMOTOR_PIDBackup);
+	retStatus &= DL_UART_Main_saveConfiguration(Blue_Serial_INST, &gBlue_SerialBackup);
 
     return retStatus;
 }
@@ -85,6 +88,7 @@ SYSCONFIG_WEAK bool SYSCFG_DL_restoreConfiguration(void)
     bool retStatus = true;
 
 	retStatus &= DL_TimerA_restoreConfiguration(MOTOR_PID_INST, &gMOTOR_PIDBackup, false);
+	retStatus &= DL_UART_Main_restoreConfiguration(Blue_Serial_INST, &gBlue_SerialBackup);
 
     return retStatus;
 }
@@ -97,6 +101,7 @@ SYSCONFIG_WEAK void SYSCFG_DL_initPower(void)
     DL_TimerA_reset(MOTOR_PID_INST);
     DL_I2C_reset(OLED_INST);
     DL_UART_Main_reset(Serial_INST);
+    DL_UART_Main_reset(Blue_Serial_INST);
     DL_ADC12_reset(POT_INST);
     DL_ADC12_reset(ADC12_0_INST);
     DL_VREF_reset(VREF);
@@ -108,6 +113,7 @@ SYSCONFIG_WEAK void SYSCFG_DL_initPower(void)
     DL_TimerA_enablePower(MOTOR_PID_INST);
     DL_I2C_enablePower(OLED_INST);
     DL_UART_Main_enablePower(Serial_INST);
+    DL_UART_Main_enablePower(Blue_Serial_INST);
     DL_ADC12_enablePower(POT_INST);
     DL_ADC12_enablePower(ADC12_0_INST);
     DL_VREF_enablePower(VREF);
@@ -139,6 +145,10 @@ SYSCONFIG_WEAK void SYSCFG_DL_GPIO_init(void)
         GPIO_Serial_IOMUX_TX, GPIO_Serial_IOMUX_TX_FUNC);
     DL_GPIO_initPeripheralInputFunction(
         GPIO_Serial_IOMUX_RX, GPIO_Serial_IOMUX_RX_FUNC);
+    DL_GPIO_initPeripheralOutputFunction(
+        GPIO_Blue_Serial_IOMUX_TX, GPIO_Blue_Serial_IOMUX_TX_FUNC);
+    DL_GPIO_initPeripheralInputFunction(
+        GPIO_Blue_Serial_IOMUX_RX, GPIO_Blue_Serial_IOMUX_RX_FUNC);
 
     DL_GPIO_initDigitalOutput(Gray_Addr_A_ADDR2_IOMUX);
 
@@ -486,6 +496,41 @@ SYSCONFIG_WEAK void SYSCFG_DL_Serial_init(void)
 
 
     DL_UART_Main_enable(Serial_INST);
+}
+static const DL_UART_Main_ClockConfig gBlue_SerialClockConfig = {
+    .clockSel    = DL_UART_MAIN_CLOCK_BUSCLK,
+    .divideRatio = DL_UART_MAIN_CLOCK_DIVIDE_RATIO_1
+};
+
+static const DL_UART_Main_Config gBlue_SerialConfig = {
+    .mode        = DL_UART_MAIN_MODE_NORMAL,
+    .direction   = DL_UART_MAIN_DIRECTION_TX_RX,
+    .flowControl = DL_UART_MAIN_FLOW_CONTROL_NONE,
+    .parity      = DL_UART_MAIN_PARITY_NONE,
+    .wordLength  = DL_UART_MAIN_WORD_LENGTH_8_BITS,
+    .stopBits    = DL_UART_MAIN_STOP_BITS_ONE
+};
+
+SYSCONFIG_WEAK void SYSCFG_DL_Blue_Serial_init(void)
+{
+    DL_UART_Main_setClockConfig(Blue_Serial_INST, (DL_UART_Main_ClockConfig *) &gBlue_SerialClockConfig);
+
+    DL_UART_Main_init(Blue_Serial_INST, (DL_UART_Main_Config *) &gBlue_SerialConfig);
+    /*
+     * Configure baud rate by setting oversampling and baud rate divisors.
+     *  Target baud rate: 9600
+     *  Actual baud rate: 9600.1
+     */
+    DL_UART_Main_setOversampling(Blue_Serial_INST, DL_UART_OVERSAMPLING_RATE_16X);
+    DL_UART_Main_setBaudRateDivisor(Blue_Serial_INST, Blue_Serial_IBRD_80_MHZ_9600_BAUD, Blue_Serial_FBRD_80_MHZ_9600_BAUD);
+
+
+    /* Configure Interrupts */
+    DL_UART_Main_enableInterrupt(Blue_Serial_INST,
+                                 DL_UART_MAIN_INTERRUPT_RX);
+
+
+    DL_UART_Main_enable(Blue_Serial_INST);
 }
 
 /* POT Initialization */

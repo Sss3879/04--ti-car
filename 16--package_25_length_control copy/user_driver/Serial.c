@@ -34,6 +34,30 @@ void Serial_Printf(const char *format, ...)
     UART_send_string(Serial_INST, buffer);
 }
 
+/* ========================== printf 重定向 (UART0) ========================== */
+int fputc(int ch, FILE *stream)
+{
+    while (DL_UART_isBusy(Serial_INST));
+    DL_UART_Main_transmitData(Serial_INST, ch);
+    return ch;
+}
+
+int fputs(const char *restrict s, FILE *restrict stream)
+{
+    uint16_t len = 0;
+    while (*s) {
+        while (DL_UART_isBusy(Serial_INST));
+        DL_UART_Main_transmitData(Serial_INST, *s++);
+        len++;
+    }
+    return len;
+}
+
+int puts(const char *_ptr)
+{
+    return 0;
+}
+
 // void Serial_INST_IRQHandler()
 // {
 //     switch (DL_UART_getPendingInterrupt(Serial_INST))

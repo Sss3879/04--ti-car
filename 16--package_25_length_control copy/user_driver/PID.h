@@ -7,6 +7,7 @@
 typedef struct{
 	float Error0;
 	float Error1;
+	float Error2;   
 	float ErrorInt;
 	
 	float Kp;
@@ -20,9 +21,9 @@ typedef struct{
 	float OutMax;
 	float OutMin;
 	
-	
+	float Integral;
 }PID_t;
 
 void PID_Update(PID_t *p);
-
+void PID_Position(PID_t *p);
 #endif

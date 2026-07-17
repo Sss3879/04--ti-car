@@ -14,6 +14,7 @@ ORDERED_OBJS += \
 "./startup_mspm0g350x_ticlang.o" \
 "./main.o" \
 "./user_driver/ADC.o" \
+"./user_driver/BlueSerial.o" \
 "./user_driver/No_Mcu_Ganv_Grayscale_Sensor.o" \
 "./user_driver/PID.o" \
 "./user_driver/Serial.o" \
@@ -146,8 +147,8 @@ all: $(OBJS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "main.o" "user_driver\ADC.o" "user_driver\No_Mcu_Ganv_Grayscale_Sensor.o" "user_driver\PID.o" "user_driver\Serial.o" "user_driver\delay.o" "user_driver\motor.o" "user_driver\oled.o" "user_driver\uart_vofa.o" 
-	-$(RM) "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "main.d" "user_driver\ADC.d" "user_driver\No_Mcu_Ganv_Grayscale_Sensor.d" "user_driver\PID.d" "user_driver\Serial.d" "user_driver\delay.d" "user_driver\motor.d" "user_driver\oled.d" "user_driver\uart_vofa.d" 
+	-$(RM) "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "main.o" "user_driver\ADC.o" "user_driver\BlueSerial.o" "user_driver\No_Mcu_Ganv_Grayscale_Sensor.o" "user_driver\PID.o" "user_driver\Serial.o" "user_driver\delay.o" "user_driver\motor.o" "user_driver\oled.o" "user_driver\uart_vofa.o" 
+	-$(RM) "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "main.d" "user_driver\ADC.d" "user_driver\BlueSerial.d" "user_driver\No_Mcu_Ganv_Grayscale_Sensor.d" "user_driver\PID.d" "user_driver\Serial.d" "user_driver\delay.d" "user_driver\motor.d" "user_driver\oled.d" "user_driver\uart_vofa.d" 
 	-@echo ' '
 
 .PHONY: all clean dependents

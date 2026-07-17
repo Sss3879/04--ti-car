@@ -27,14 +27,14 @@ void Motor_SetDuty(uint8_t motor, int32_t duty)
     {
         if(duty>=0)
         {   
-            DL_GPIO_setPins(Motor_AIN1_PORT, Motor_AIN1_PIN) ;
-            DL_GPIO_clearPins(Motor_AIN2_PORT,Motor_AIN2_PIN);
+            DL_GPIO_clearPins(Motor_AIN1_PORT, Motor_AIN1_PIN) ;
+            DL_GPIO_setPins(Motor_AIN2_PORT,Motor_AIN2_PIN);
             DL_Timer_setCaptureCompareValue(PWM1_INST,duty,GPIO_PWM1_C0_IDX);
         }
         else
         {
-            DL_GPIO_clearPins(Motor_AIN1_PORT, Motor_AIN1_PIN) ;
-            DL_GPIO_setPins(Motor_AIN2_PORT,Motor_AIN2_PIN);
+            DL_GPIO_setPins(Motor_AIN1_PORT, Motor_AIN1_PIN) ;
+            DL_GPIO_clearPins(Motor_AIN2_PORT,Motor_AIN2_PIN);
             DL_Timer_setCaptureCompareValue(PWM1_INST,-duty,GPIO_PWM1_C0_IDX);
         }
 
@@ -43,14 +43,14 @@ void Motor_SetDuty(uint8_t motor, int32_t duty)
     {
         if(duty>=0)
         {
-            DL_GPIO_setPins(Motor_BIN1_PORT, Motor_BIN1_PIN) ;
-            DL_GPIO_clearPins(Motor_BIN2_PORT,Motor_BIN2_PIN);
+            DL_GPIO_clearPins(Motor_BIN1_PORT, Motor_BIN1_PIN) ;
+            DL_GPIO_setPins(Motor_BIN2_PORT,Motor_BIN2_PIN);
             DL_Timer_setCaptureCompareValue(PWM1_INST,duty,GPIO_PWM1_C1_IDX);
         }
         else 
         {
-            DL_GPIO_clearPins(Motor_BIN1_PORT, Motor_BIN1_PIN) ;
-            DL_GPIO_setPins(Motor_BIN2_PORT,Motor_BIN2_PIN);
+            DL_GPIO_setPins(Motor_BIN1_PORT, Motor_BIN1_PIN) ;
+            DL_GPIO_clearPins(Motor_BIN2_PORT,Motor_BIN2_PIN);
             DL_Timer_setCaptureCompareValue(PWM1_INST,-duty,GPIO_PWM1_C1_IDX);
         }
         
@@ -73,7 +73,7 @@ void calculate_speed(uint8_t motor_id)
             speed_1 = 0;
             return;
         }
-        speed_1 = (float)count / MOTOR_BIANMAQI * PI * MOTOR_WHEEL_D * 20;
+        speed_1 = -(float)count / MOTOR_BIANMAQI * PI * MOTOR_WHEEL_D * 20;
     }
 
     else if (motor_id == 2) {
@@ -84,7 +84,7 @@ void calculate_speed(uint8_t motor_id)
             speed_2 = 0;
             return;
         }
-        speed_2 = -(float)count / MOTOR_BIANMAQI * PI * MOTOR_WHEEL_D * 20;
+        speed_2 = (float)count / MOTOR_BIANMAQI * PI * MOTOR_WHEEL_D * 20;
     }
 
 
@@ -109,8 +109,8 @@ void MOTOR_PID_INST_IRQHandler(void)
             PID_Update(&Motor_Left);
             PID_Update(&Motor_Right);
 
-            Motor_SetDuty(1,Motor_Right.Out);
-            Motor_SetDuty(2,Motor_Left.Out);
+            Motor_SetDuty(2, (int32_t)Motor_Left.Out);
+            Motor_SetDuty(1, (int32_t)Motor_Right.Out);
             break;
         default:
             break;

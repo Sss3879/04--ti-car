@@ -8,6 +8,7 @@ typedef struct{
 	float Error0;
 	float Error1;
 	float Error2;   
+	float ErrorInt;
 	
 	float Kp;
 	float Ki;

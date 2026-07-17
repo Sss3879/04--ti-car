@@ -25,8 +25,8 @@ char buffer[64];
 
 PID_t Motor_Left={
 
-	.Kp=2.64f,
-	.Ki=1.47f,
+	.Kp=4.56f,
+	.Ki=1.01f,
 	.Kd=0,
 	.Target=0,
 	.OutMax=800,
@@ -36,8 +36,8 @@ PID_t Motor_Left={
 
 PID_t Motor_Right={
 
-	.Kp=1.85f,
-	.Ki=1.3f,
+	.Kp=3.97f,
+	.Ki=0.95f,
 	.Kd=0,
 	.Target=0,
 	.OutMax=800,
@@ -47,8 +47,8 @@ PID_t Motor_Right={
 
 // ======== 灰度传感器变量 ========
 	// 黑白校准值(实测标定: 黑≈330, 白≈1600~3000)
-	unsigned short white[8] = {520, 2900, 2500, 2000, 1550, 1850, 2100, 1650};
-	unsigned short black[8] = {350,  350,  350,  350,  350,  350,  350,  350};
+	unsigned short white[8] = {1315,1300,1331,1347,1609,1604,1739,1746   };
+	unsigned short black[8] = {350,350,350,350,350,350  };
 unsigned short Anolog[8]  = {0};
 unsigned short Normal[8]  = {0};
 
@@ -59,12 +59,12 @@ unsigned char Digtal;
 int16_t Line_Error = 0;
 uint8_t Line_LostFlag = 0;
 
-int16_t BaseSpeed = 35;
+int16_t BaseSpeed = 80;
 float Line_Kp = 0.03f;
 
 
-#define SPEED_MAX 40
-#define SPEED_MIN -40
+#define SPEED_MAX 120
+#define SPEED_MIN -120
 
 float Limit_Float(float value, float min, float max)
 {
@@ -130,39 +130,41 @@ int main(void)
 
     while(1)
     {
-        // // ======== 灰度传感器任务 ========
-        // No_Mcu_Ganv_Sensor_Task_Without_tick(&sensor);
+        // ======== 灰度传感器任务 ========
+        No_Mcu_Ganv_Sensor_Task_Without_tick(&sensor);
 
-        // // 获取数字量（8位, 每位对应一个通道: 1=白 0=黑）
-        // Digtal = Get_Digtal_For_User(&sensor);
+        // 获取数字量（8位, 每位对应一个通道: 1=白 0=黑）
+        Digtal = Get_Digtal_For_User(&sensor);
 
-        // // 获取原始模拟值
-        // Get_Anolog_Value(&sensor, Anolog);
+        // 获取原始模拟值
+        Get_Anolog_Value(&sensor, Anolog);
 
-        // // 获取归一化值
-        // Get_Normalize_For_User(&sensor, Normal);
+        // 获取归一化值
+        Get_Normalize_For_User(&sensor, Normal);
 
-        // // ======== 串口输出传感器数据 ========
-        // Serial_Printf("D:%d%d%d%d%d%d%d%d ",
-        //     (Digtal>>0)&1, (Digtal>>1)&1, (Digtal>>2)&1, (Digtal>>3)&1,
-        //     (Digtal>>4)&1, (Digtal>>5)&1, (Digtal>>6)&1, (Digtal>>7)&1);
+        // ======== 串口输出传感器数据 ========
+        Serial_Printf("D:%d%d%d%d%d%d%d%d ",
+            (Digtal>>0)&1, (Digtal>>1)&1, (Digtal>>2)&1, (Digtal>>3)&1,
+            (Digtal>>4)&1, (Digtal>>5)&1, (Digtal>>6)&1, (Digtal>>7)&1);
 
-        // Serial_Printf("A:%d,%d,%d,%d,%d,%d,%d,%d ",
-        //     Anolog[0], Anolog[1], Anolog[2], Anolog[3],
-        //     Anolog[4], Anolog[5], Anolog[6], Anolog[7]);
+        Serial_Printf("A:%d,%d,%d,%d,%d,%d,%d,%d ",
+            Anolog[0], Anolog[1], Anolog[2], Anolog[3],
+            Anolog[4], Anolog[5], Anolog[6], Anolog[7]);
 
-        // Serial_Printf("N:%d,%d,%d,%d,%d,%d,%d,%d\r\n",
-        //     Normal[0], Normal[1], Normal[2], Normal[3],
-        //     Normal[4], Normal[5], Normal[6], Normal[7]);
-        Car_LineControl();
+        Serial_Printf("N:%d,%d,%d,%d,%d,%d,%d,%d\r\n",
+            Normal[0], Normal[1], Normal[2], Normal[3],
+            Normal[4], Normal[5], Normal[6], Normal[7]);
 
-        Serial_Printf("%d,%d,%.2f,%.2f,%.2f,%.2f\r\n",
-                        Line_Error,
-                        Line_LostFlag,
-                        Motor_Left.Target,
-                        Motor_Right.Target,
-                        Motor_Left.Actual,
-                        Motor_Right.Actual);
+        // //灰度巡线任务
+        // Car_LineControl();
+
+        // Serial_Printf("%d,%d,%.2f,%.2f,%.2f,%.2f\r\n",
+        //                 Line_Error,
+        //                 Line_LostFlag,
+        //                 Motor_Left.Target,
+        //                 Motor_Right.Target,
+        //                 Motor_Left.Actual,
+        //                 Motor_Right.Actual);
     
 
         // ======== VOFA+ PID调试（可注释上面Serial_Printf，改用这个看波形） ========
@@ -197,13 +199,21 @@ void GROUP1_IRQHandler(void)
     // 编码器1：E1A = PA21，E1B = PA22
     if(gpioa_pending == Motor_E1A_IIDX)
     {
-        if(DL_GPIO_readPins(Motor_E1B_PORT, Motor_E1B_PIN))
+        /* 只在A相有效边沿判向，避免抖动造成错误计数。 */
+        if (DL_GPIO_readPins(Motor_E1A_PORT, Motor_E1A_PIN))
         {
-            Encoder1_Count++;
-        }
-        else
-        {
-            Encoder1_Count--;
+            delay_cycles(100);
+            if (DL_GPIO_readPins(Motor_E1A_PORT, Motor_E1A_PIN))
+            {
+                if(DL_GPIO_readPins(Motor_E1B_PORT, Motor_E1B_PIN))
+                {
+                    Encoder1_Count--;
+                }
+                else
+                {
+                    Encoder1_Count++;
+                }
+            }
         }
     }
 
@@ -211,13 +221,17 @@ void GROUP1_IRQHandler(void)
     switch(gpiob_pending)
     {
         case Motor_E2A_IIDX:
+            if (!DL_GPIO_readPins(Motor_E2A_PORT, Motor_E2A_PIN)) break;
+            delay_cycles(100);
+            if (!DL_GPIO_readPins(Motor_E2A_PORT, Motor_E2A_PIN)) break;
+
             if(DL_GPIO_readPins(Motor_E2B_PORT, Motor_E2B_PIN))
             {
-                Encoder2_Count++;
+                Encoder2_Count--;
             }
             else
             {
-                Encoder2_Count--;
+                Encoder2_Count++;
             }
             break;
 

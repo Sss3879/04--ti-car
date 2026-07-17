@@ -5,6 +5,21 @@
 u8 OLED_GRAM[144][8];
 extern void delay_ms(uint32_t ms);
 
+#define OLED_I2C_TIMEOUT  (100000U)
+static volatile uint8_t OLED_CommunicationFault = 0;
+
+uint8_t OLED_HasCommunicationFault(void)
+{
+	return OLED_CommunicationFault;
+}
+
+void OLED_ClearCommunicationFault(void)
+{
+	DL_I2C_resetControllerTransfer(OLED_INST);
+	SYSCFG_DL_OLED_init();
+	OLED_CommunicationFault = 0;
+}
+
 //反显函数
 void OLED_ColorTurn(u8 i)
 {
@@ -30,13 +45,28 @@ void OLED_DisplayTurn(u8 i)
 void OLED_WR_Byte(uint8_t dat, uint8_t mode)
 {
     uint8_t txData[2];
+    uint32_t timeout;
+
+    /* Skip the rest of a frame after one failed transfer. */
+    if (OLED_CommunicationFault)
+    {
+        return;
+    }
     
     // 控制字节: 0x00为命令, 0x40为数据
     txData[0] = mode ? 0x40 : 0x00; 
     txData[1] = dat;
 
     // 1. 等待 I2C 彻底空闲
-    while (!(DL_I2C_getControllerStatus(OLED_INST) & DL_I2C_CONTROLLER_STATUS_IDLE));
+    timeout = OLED_I2C_TIMEOUT;
+    while (!(DL_I2C_getControllerStatus(OLED_INST) & DL_I2C_CONTROLLER_STATUS_IDLE))
+    {
+        if (--timeout == 0U)
+        {
+            OLED_CommunicationFault = 1;
+            return;
+        }
+    }
     
     // 2. 将 2 个字节填入发送 FIFO
     DL_I2C_fillControllerTXFIFO(OLED_INST, txData, 2);
@@ -45,10 +75,26 @@ void OLED_WR_Byte(uint8_t dat, uint8_t mode)
     DL_I2C_startControllerTransfer(OLED_INST, 0x3C, DL_I2C_CONTROLLER_DIRECTION_TX, 2);
     
     // 4. 等待总线变为 BUSY 状态 (确保硬件状态机已经启动，比 delay 更可靠)
-    while (!(DL_I2C_getControllerStatus(OLED_INST) & DL_I2C_CONTROLLER_STATUS_BUSY_BUS));
+    timeout = OLED_I2C_TIMEOUT;
+    while (!(DL_I2C_getControllerStatus(OLED_INST) & DL_I2C_CONTROLLER_STATUS_BUSY_BUS))
+    {
+        if (--timeout == 0U)
+        {
+            OLED_CommunicationFault = 1;
+            return;
+        }
+    }
     
     // 5. 再次等待 I2C 回到空闲状态 (代表本次传输真正完成)
-    while (!(DL_I2C_getControllerStatus(OLED_INST) & DL_I2C_CONTROLLER_STATUS_IDLE));
+    timeout = OLED_I2C_TIMEOUT;
+    while (!(DL_I2C_getControllerStatus(OLED_INST) & DL_I2C_CONTROLLER_STATUS_IDLE))
+    {
+        if (--timeout == 0U)
+        {
+            OLED_CommunicationFault = 1;
+            return;
+        }
+    }
 }
 
 //开启OLED显示 

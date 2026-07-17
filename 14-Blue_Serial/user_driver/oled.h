@@ -327,5 +327,9 @@ void OLED_ShowPicture(u8 x0,u8 y0,u8 x1,u8 y1,u8 BMP[]);
  */
 void OLED_Init(void);
 
+/* I2C fault handling: prevents a disconnected/brownout OLED from blocking forever. */
+uint8_t OLED_HasCommunicationFault(void);
+void OLED_ClearCommunicationFault(void);
+
 
 #endif

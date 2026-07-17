@@ -91,15 +91,14 @@ int main(void)
 {
     SYSCFG_DL_init();
     printf("OK");
-	IMU_init();
-    TimeA1_Init();
+	// IMU_init();
+    // TimeA1_Init();
     //bsp_Icm42688Init();
     delay_ms(20);
 
     while (1)
     {
-        printf("11");
-        printf("%.2f-%.2f-%.2f\r\n",ypr[0],ypr[1],ypr[2]);
-        delay_ms(50);
+        __NOP();
+
     }
 }

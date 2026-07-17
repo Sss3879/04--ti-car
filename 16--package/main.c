@@ -31,18 +31,18 @@
 
 /* ========================== PID 参数 ========================== */
 PID_t Motor_Left = {
-    .Kp = 1.00f, .Ki = 1.77f, .Kd = 0,
-    .Target = 50, .OutMax = 500, .OutMin = -500,
+    .Kp = 4.56f, .Ki = 1.01f, .Kd = 0,
+    .Target = 0, .OutMax = 2500, .OutMin = -2500,
 };
 
 PID_t Motor_Right = {
-    .Kp = 1.27f, .Ki = 2.00f, .Kd = 0,
-    .Target = 50, .OutMax = 500, .OutMin = -500,
+    .Kp = 3.97f, .Ki = 0.95f, .Kd = 0,
+    .Target = 0, .OutMax = 2500, .OutMin = -2500,
 };
 
 PID_t Angle_PID = {
     .Kp = 2.17, .Ki = 0, .Kd = 0.28,
-    .Target = 0, .OutMax = 90, .OutMin = -90,
+    .Target = 0, .OutMax = 150, .OutMin = -150,
 };
 
 /* ========================== 运行模式 ========================== */
@@ -77,12 +77,19 @@ extern float speed_1;
 extern float speed_2;
 extern uint8_t printf_flag;
 extern int32_t dbg_c1, dbg_c2;
+extern volatile uint32_t motor_irq_count;
+extern volatile uint32_t motor_pid_count;
 
 char buffer[64];
 float ypr[3];
 uint8_t ICM42688_UpdateFlag = 0;
 RunMode_t RunMode = MODE_STOP;
-int16_t BaseSpeed = 50;
+
+int16_t BaseSpeed = 200;
+
+#define SPEED_MAX  250
+#define SPEED_MIN -250
+
 static uint8_t DisplayTick = 0;
 
 /* ========================== 矩形路线参数 ========================== */
@@ -92,14 +99,15 @@ uint8_t Lost_Count = 0;
 uint8_t FindLine_Count = 0;
 
 #define TURN_ANGLE_DEG        40.0f
-#define TURN_SPEED            6
-#define FIND_SPEED            5
+#define TURN_SPEED            50
+#define FIND_SPEED            40
 #define LOST_CONFIRM_COUNT    2
 #define FIND_CONFIRM_COUNT    3
 
 /* ========================== 灰度传感器 ========================== */
-unsigned short white[8]  = {520, 2900, 2500, 2000, 1550, 1850, 2100, 1650};
-unsigned short black[8]  = {350, 350, 350, 350, 350, 350, 350, 350};
+	/* 与 10-GraySensor 当前实测标定值保持一致。 */
+	unsigned short white[8] = {1315,1300,1331,1347,1609,1604,1739,1746   };
+	unsigned short black[8] = {350,350,350,350,350,350  };
 unsigned short Anolog[8] = {0};
 unsigned short Normal[8] = {0};
 No_MCU_Sensor sensor;
@@ -118,8 +126,6 @@ static float Limit_Float(float value, float min, float max)
     return value;
 }
 
-#define SPEED_MAX  40
-#define SPEED_MIN -40
 
 void Car_LineControl(void)
 {
@@ -128,8 +134,8 @@ void Car_LineControl(void)
     Line_LostFlag = GraySensor_GetLostFlag();
 
     Turn = (int16_t)(Line_Kp * Line_Error);
-    if (Turn > 8)  Turn = 8;
-    if (Turn < -8) Turn = -8;
+    if (Turn > 15)  Turn = 15;
+    if (Turn < -15) Turn = -15;
 
     Motor_Left.Target  = Limit_Float(BaseSpeed + Turn, SPEED_MIN, SPEED_MAX);
     Motor_Right.Target = Limit_Float(BaseSpeed - Turn, SPEED_MIN, SPEED_MAX);
@@ -174,9 +180,8 @@ void Car_FindLineControl(void)
 
 uint8_t Rect_CornerDetected(void)
 {
-    Line_Error   = GraySensor_GetLineError(&sensor);
-    Line_LostFlag = GraySensor_GetLostFlag();
-    if (Line_LostFlag == 1) {
+    /* 用二值化结果判断丢线：8路全白(0xFF) = 丢线 */
+    if (Digtal == 0xFF) {
         if (++Lost_Count >= LOST_CONFIRM_COUNT) { Lost_Count = 0; return 1; }
     } else {
         Lost_Count = 0;
@@ -186,9 +191,8 @@ uint8_t Rect_CornerDetected(void)
 
 uint8_t Rect_FindLineDetected(void)
 {
-    Line_Error   = GraySensor_GetLineError(&sensor);
-    Line_LostFlag = GraySensor_GetLostFlag();
-    if (Line_LostFlag == 0 && Line_Error > -250 && Line_Error < 250) {
+    /* 至少有一路看到黑(0) = 找到线 */
+    if (Digtal != 0xFF) {
         if (++FindLine_Count >= FIND_CONFIRM_COUNT) { FindLine_Count = 0; return 1; }
     } else {
         FindLine_Count = 0;
@@ -250,22 +254,31 @@ void OLED_DisplayStatus(void)
 {
     char line[32];
 
-    /* 第1行：模式 (y=0) — 空格填充覆盖旧内容 */
-    snprintf(line, sizeof(line), "Mode:%-5s S:%-2d",
+    /* 第1行：模式 (y=0) */
+    snprintf(line, sizeof(line), "Mode:%-5s",
              RunMode == MODE_STOP  ? "STOP" :
              RunMode == MODE_ANGLE ? "Angle" :
-             RunMode == MODE_LINE  ? "Line" : "Rect",
-             RoadState);
+             RunMode == MODE_LINE  ? "Line" : "Rect");
     OLED_ShowString(0, 0, (u8 *)line, 12);
 
-    /* 第2行：速度 + 目标角度 (y=16) */
-    snprintf(line, sizeof(line), "Spd:%-4.0f T:%-4.0f   ",
-             (float)BaseSpeed, Angle_PID.Target);
+    /* 第2行：矩形子状态 (y=16) */
+    snprintf(line, sizeof(line), "Road:%-2d %-8s",
+             RoadState,
+             RoadState == RECT_AB_LINE      ? "AB_Line" :
+             RoadState == RECT_B_TURN       ? "B_Turn" :
+             RoadState == RECT_B_FIND_LINE  ? "B_Find" :
+             RoadState == RECT_BC_LINE      ? "BC_Line" :
+             RoadState == RECT_C_TURN       ? "C_Turn" :
+             RoadState == RECT_C_FIND_LINE  ? "C_Find" :
+             RoadState == RECT_CD_LINE      ? "CD_Line" :
+             RoadState == RECT_D_TURN       ? "D_Turn" :
+             RoadState == RECT_D_FIND_LINE  ? "D_Find" :
+             RoadState == RECT_DA_LINE      ? "DA_Line" : "STOP");
     OLED_ShowString(0, 16, (u8 *)line, 12);
 
-    /* 第3行：角度环 PID (y=32) */
-    snprintf(line, sizeof(line), "AP:%-5.2f AI:%-5.2f AD:%-5.2f",
-             Angle_PID.Kp, Angle_PID.Ki, Angle_PID.Kd);
+    /* 第3行：实际速度 (y=32) */
+    snprintf(line, sizeof(line), "La:%-5.1f Ra:%-5.1f  ",
+             speed_1, speed_2);
     OLED_ShowString(0, 32, (u8 *)line, 12);
 
     /* 第4行：当前 yaw + 巡线误差 (y=48) */
@@ -289,11 +302,6 @@ void TimeA1_Init(void)
 int main(void)
 {
 
-    // // /* ---- 硬件初始化 ---- */
-    // SYSCFG_DL_init();
-    // Buzzer_Init();
-    // BlueSerial_Init();
-    // OLED_Init();
 
 
     // // OLED_ColorTurn(0);
@@ -327,17 +335,26 @@ int main(void)
     No_MCU_Ganv_Sensor_Init(&sensor, white, black);     // 灰度传感器
     TimeA1_Init();
 
+    /* ---- 启动 ADC + DMA（灰度传感器） ---- */
+    DL_DMA_setSrcAddr(DMA, DMA_CH0_CHAN_ID, (uint32_t)&ADC0->ULLMEM.MEMRES[0]);
+    DL_DMA_setDestAddr(DMA, DMA_CH0_CHAN_ID, (uint32_t)&ADC_VALUE[0]);
+    DL_DMA_enableChannel(DMA, DMA_CH0_CHAN_ID);
+    DL_ADC12_startConversion(ADC12_0_INST);
+
     /* ---- 使能外设中断 ---- */
     NVIC_EnableIRQ(GPIO_MULTIPLE_GPIOA_INT_IRQN);
     NVIC_EnableIRQ(Motor_GPIOB_INT_IRQN);
     NVIC_EnableIRQ(Serial_INST_INT_IRQN);
 
     /* ---- 等待传感器稳定 ---- */
-    Serial_Printf("Calibrating... keep still\r\n");
+    // Serial_Printf("Calibrating... keep still\r\n");
     BlueSerial_Printf("Calibrating...\r\n");
     delay_ms(2000);                                     // 给 IMU 2 秒稳定时间
-    Serial_Printf("---  Start ---\r\n");
+    // Serial_Printf("---  Start ---\r\n");
     delay_ms(20);
+
+    /* ---- 启动电机驱动 ---- */
+    Motor_Init();
 
     /* ---- 主循环 ---- */
     while (1)
@@ -346,6 +363,12 @@ int main(void)
         if (ICM42688_UpdateFlag == 1)
         {
             ICM42688_UpdateFlag = 0;
+
+            /* 与 10-GraySensor 一致：控制计算前先刷新灰度数据。 */
+            No_Mcu_Ganv_Sensor_Task_Without_tick(&sensor);
+            Digtal = Get_Digtal_For_User(&sensor);
+            Get_Anolog_Value(&sensor, Anolog);
+            Get_Normalize_For_User(&sensor, Normal);
 
             switch (RunMode)
             {
@@ -367,22 +390,37 @@ int main(void)
                     break;
             }
 
-            BlueSerial_Printf("[plot,%.2f,%.2f,%.2f,%.2f,%.2f]",
-                              Angle_PID.Target,
-                              Angle_PID.Actual,
-                              Angle_PID.Out,
-                              Motor_Left.Target,
-                              Motor_Right.Target);
+            // BlueSerial_Printf("[plot,%.2f,%.2f,%.2f,%.2f,%.2f]",
+            //                   Angle_PID.Target,
+            //                   Angle_PID.Actual,
+            //                   Angle_PID.Out,
+            //                   Motor_Left.Target,
+            //                   Motor_Right.Target);
 
-            /* OLED 每 200ms 刷新 (10次 × 20ms) */
-            if (++DisplayTick >= 10)
+            /* OLED 每 60ms 刷新 + 灰度蓝牙打印 (3次 × 20ms) */
+            if (++DisplayTick >= 3)
             {
                 DisplayTick = 0;
                 OLED_DisplayStatus();
+
+                /* 灰度 + 电机调试（仅巡线时） */
+                if (RunMode == MODE_RECT) {
+                    BlueSerial_Printf("[Gray D:%d%d%d%d%d%d%d%d Err:%d L:%d "
+                                      "Lt:%.0f Rt:%.0f "
+                                      "La:%.1f Ra:%.1f Out:%.0f,%.0f "
+                                      "S:%d LC:%d]\r\n",
+                        (Digtal>>0)&1, (Digtal>>1)&1, (Digtal>>2)&1, (Digtal>>3)&1,
+                        (Digtal>>4)&1, (Digtal>>5)&1, (Digtal>>6)&1, (Digtal>>7)&1,
+                        Line_Error, Line_LostFlag,
+                        Motor_Left.Target, Motor_Right.Target,
+                        speed_1, speed_2,
+                        Motor_Left.Out, Motor_Right.Out,
+                        RoadState, Lost_Count);
+                }
             }
         }
 
-        /* ---------- 串口 VOFA 命令 (UART0) ---------- */
+        /* -------------- */
         if (Serial_RxFlag == 1)
         {
             vofa_parse_packet(Serial_RxPacket);
@@ -446,13 +484,12 @@ int main(void)
         /* ---------- 按键处理 ---------- */
         if (status == 1)              // Key1: 切换模式
         {
-            RunMode = (RunMode + 1) % 4;   // STOP→Angle→Line→Rect→STOP
+            RunMode = (RunMode == MODE_STOP) ? MODE_RECT : MODE_STOP;   // STOP↔RECT
             if (RunMode == MODE_RECT) {
                 RoadState = RECT_AB_LINE;
                 StartAngle = ypr[0];
-                BaseSpeed = 18;
             }
-            Serial_Printf("Mode: %d\r\n", RunMode);
+            // Serial_Printf("Mode: %d\r\n", RunMode);
             BlueSerial_Printf("Mode: %d\r\n", RunMode);
             status = 0;
         }
@@ -462,7 +499,7 @@ int main(void)
             BaseSpeed = 0;
             Motor_Left.Target  = 0;
             Motor_Right.Target = 0;
-            Serial_Printf("STOP\r\n");
+            // Serial_Printf("STOP\r\n");
             BlueSerial_Printf("STOP\r\n");
             status = 0;
         }
@@ -497,13 +534,23 @@ void GROUP1_IRQHandler(void)
     switch (gpioa)
     {
         case Motor_E1A_IIDX:
-            Encoder1_Count += DL_GPIO_readPins(Motor_E1B_PORT, Motor_E1B_PIN) ? 1 : -1;
+            if (DL_GPIO_readPins(Motor_E1A_PORT, Motor_E1A_PIN))
+            {
+                delay_cycles(100);
+                if (DL_GPIO_readPins(Motor_E1A_PORT, Motor_E1A_PIN))
+                {
+                    if (DL_GPIO_readPins(Motor_E1B_PORT, Motor_E1B_PIN))
+                        Encoder1_Count--;
+                    else
+                        Encoder1_Count++;
+                }
+            }
             break;
         case Key_Key1_IIDX:
-            status = (status + 1) % 3;
+            status = 1;   // 切换 STOP↔RECT
             break;
         case Key_Key2_IIDX:
-            status = (status + 2) % 3;
+            status = 2;   // 紧急停止
             break;
         default:
             break;
@@ -512,6 +559,16 @@ void GROUP1_IRQHandler(void)
     /* GPIOB: 编码器2 E2A=PB19 */
     if (gpiob == Motor_E2A_IIDX)
     {
-        Encoder2_Count += DL_GPIO_readPins(Motor_E2B_PORT, Motor_E2B_PIN) ? 1 : -1;
+        if (DL_GPIO_readPins(Motor_E2A_PORT, Motor_E2A_PIN))
+        {
+            delay_cycles(100);
+            if (DL_GPIO_readPins(Motor_E2A_PORT, Motor_E2A_PIN))
+            {
+                if (DL_GPIO_readPins(Motor_E2B_PORT, Motor_E2B_PIN))
+                    Encoder2_Count--;
+                else
+                    Encoder2_Count++;
+            }
+        }
     }
 }

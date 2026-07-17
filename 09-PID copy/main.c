@@ -3,6 +3,19 @@
 /*              Key按键                  PB6|PB7  */
 /*              POT电位器旋钮             PA16       */
 /*              POT电位器旋钮             PA16       */
+
+
+//        // 同时发送左右轮（VOFA+可拆分多通道显示）
+        // case 2:
+        //     Serial_Printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
+        //                 // 左轮6个参数
+        //                 Motor_Left.Target, Motor_Left.Actual, Motor_Left.Out,
+        //                 Motor_Left.Kp, Motor_Left.Ki, Motor_Left.Kd,
+        //                 // 右轮6个参数
+        //                 Motor_Right.Target, Motor_Right.Actual, Motor_Right.Out,
+        //                 Motor_Right.Kp, Motor_Right.Ki, Motor_Right.Kd);
+        //     break;
+            
 #include "ti_msp_dl_config.h"
 #include "delay.h"
 #include "oled.h"
@@ -23,10 +36,10 @@ char buffer[64];
 
 PID_t Motor_Left={
 	
-	.Kp=2.64f,
-	.Ki=1.47f,
+	.Kp=3.98f,
+	.Ki=1.31f,//P:2.64   I:1.47
 	.Kd=0,
-	.Target=100,
+	.Target=0,
 	.OutMax=400,
 	.OutMin=-400,
 	
@@ -34,10 +47,10 @@ PID_t Motor_Left={
 
 PID_t Motor_Right={
 	
-	.Kp=1.85f,
-	.Ki=1.3f,
+	.Kp=6.2f,
+	.Ki=1.85f,//P:1.85   I；1.3
 	.Kd=0,
-	.Target=100,
+	.Target=0,
 	.OutMax=400,
 	.OutMin=-400,
 	
@@ -106,13 +119,21 @@ void GROUP1_IRQHandler(void)
     // 编码器1：E1A = PA21，E1B = PA22
     if(gpioa_pending == Motor_E1A_IIDX)
     {
-        if(DL_GPIO_readPins(Motor_E1B_PORT, Motor_E1B_PIN))
+        /* 只在A相有效边沿判向，避免双边沿触发造成正反转同号。 */
+        if (DL_GPIO_readPins(Motor_E1A_PORT, Motor_E1A_PIN))
         {
-            Encoder1_Count++;
-        }
-        else
-        {
-            Encoder1_Count--;
+            delay_cycles(100);
+            if (DL_GPIO_readPins(Motor_E1A_PORT, Motor_E1A_PIN))
+            {
+                if(DL_GPIO_readPins(Motor_E1B_PORT, Motor_E1B_PIN))
+                {
+                    Encoder1_Count--;
+                }
+                else
+                {
+                    Encoder1_Count++;
+                }
+            }
         }
     }
 
@@ -120,13 +141,17 @@ void GROUP1_IRQHandler(void)
     switch(gpiob_pending)
     {
         case Motor_E2A_IIDX:
+            if (!DL_GPIO_readPins(Motor_E2A_PORT, Motor_E2A_PIN)) break;
+            delay_cycles(100);
+            if (!DL_GPIO_readPins(Motor_E2A_PORT, Motor_E2A_PIN)) break;
+
             if(DL_GPIO_readPins(Motor_E2B_PORT, Motor_E2B_PIN))
             {
-                Encoder2_Count++;
+                Encoder2_Count--;
             }
             else
             {
-                Encoder2_Count--;
+                Encoder2_Count++;
             }
             break;
 

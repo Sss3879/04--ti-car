@@ -2,21 +2,32 @@
 
 void PID_Update(PID_t *p)
 {
-    // 滑动误差
-    p->Error2 = p->Error1;
-    p->Error1 = p->Error0;
-    p->Error0 = p->Target - p->Actual;
-	
+	float integral;
+	float output;
 
-    // 增量式核心公式
-    float dOut = p->Kp * (p->Error0 - p->Error1)
-               + p->Ki * p->Error0
-               + p->Kd * (p->Error0 - 2.0f * p->Error1 + p->Error2);
+	p->Error1 = p->Error0;
+	p->Error0 = p->Target - p->Actual;
 
-    p->Out += dOut;
-	
-	if(p->Out> p->OutMax){p->Out= p->OutMax;}
-	if(p->Out< p->OutMin){p->Out= p->OutMin;}
+	/* 与 10-GraySensor 一致的条件积分位置式 PID。 */
+	integral = (p->Ki != 0.0f) ? (p->ErrorInt + p->Error0) : 0.0f;
+	output = p->Kp * p->Error0
+	       + p->Ki * integral
+	       + p->Kd * (p->Error0 - p->Error1);
+
+	if ((output <= p->OutMax && output >= p->OutMin) ||
+	    (output > p->OutMax && p->Error0 < 0.0f) ||
+	    (output < p->OutMin && p->Error0 > 0.0f))
+	{
+		p->ErrorInt = integral;
+	}
+
+	output = p->Kp * p->Error0
+	       + p->Ki * p->ErrorInt
+	       + p->Kd * (p->Error0 - p->Error1);
+
+	if (output > p->OutMax) output = p->OutMax;
+	if (output < p->OutMin) output = p->OutMin;
+	p->Out = output;
 }
 void PID_Position(PID_t *p)
 {

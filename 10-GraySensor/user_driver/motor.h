@@ -10,8 +10,8 @@
 // 轮胎直径 mm
 #define MOTOR_WHEEL_D 48
 
-// 50ms内最大合理脉冲数（260线编码器 300RPM≈65脉冲/50ms，取200留余量）
-#define MAX_ENCODER_COUNT 200
+// 50 ms测速周期内允许的最大编码器计数，用于过滤明显的干扰脉冲
+#define MAX_ENCODER_COUNT 1000
 
 
 

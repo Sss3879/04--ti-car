@@ -238,6 +238,15 @@
                 "name": "ICM42688",
                 "resourceId": "/ICM42688"
             }
+        },
+        {
+            "name": "09-PID_++outmax",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "09-PID_++outmax",
+                "resourceId": "/09-PID_++outmax"
+            }
         }
     ]
 }

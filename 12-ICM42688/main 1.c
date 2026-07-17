@@ -4,6 +4,7 @@
 /*              POT电位器旋钮             PA16       */
 /*              POT电位器旋钮             PA16       */
 
+
 /* Angle_PID：航向角(Yaw)控制环
  *
  * 用于保持直线行驶，通过左右轮差速修正方向。
@@ -278,13 +279,16 @@ void GROUP1_IRQHandler(void)
     // 编码器1：E1A = PA21，E1B = PA22
     if(gpioa_pending == Motor_E1A_IIDX)
     {
-        if(DL_GPIO_readPins(Motor_E1B_PORT, Motor_E1B_PIN))
+        if (DL_GPIO_readPins(Motor_E1A_PORT, Motor_E1A_PIN))
         {
-            Encoder1_Count++;
-        }
-        else
-        {
-            Encoder1_Count--;
+            delay_cycles(100);
+            if (DL_GPIO_readPins(Motor_E1A_PORT, Motor_E1A_PIN))
+            {
+                if(DL_GPIO_readPins(Motor_E1B_PORT, Motor_E1B_PIN))
+                    Encoder1_Count--;
+                else
+                    Encoder1_Count++;
+            }
         }
     }
 
@@ -292,13 +296,16 @@ void GROUP1_IRQHandler(void)
     switch(gpiob_pending)
     {
         case Motor_E2A_IIDX:
+            if (!DL_GPIO_readPins(Motor_E2A_PORT, Motor_E2A_PIN)) break;
+            delay_cycles(100);
+            if (!DL_GPIO_readPins(Motor_E2A_PORT, Motor_E2A_PIN)) break;
             if(DL_GPIO_readPins(Motor_E2B_PORT, Motor_E2B_PIN))
             {
-                Encoder2_Count++;
+                Encoder2_Count--;
             }
             else
             {
-                Encoder2_Count--;
+                Encoder2_Count++;
             }
             break;
 

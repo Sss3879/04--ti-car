@@ -34,6 +34,8 @@
 #include "icm42688.h"
 #include "IMU.h"
 #include "buzzer.h"
+int ImuMissCount ;
+
 
 /* ========================== PID ========================== */
 PID_t Motor_Left  = { .Kp=4.56f, .Ki=1.01f, .Kd=0, .Target=0, .OutMax=2500, .OutMin=-2500 };
@@ -53,8 +55,10 @@ volatile int32_t Encoder2_Count = 0;
 volatile int32_t Enc1_Total = 0;      // 累计（不随PID清零）
 volatile int32_t Enc2_Total = 0;      // 累计
 extern float speed_1, speed_2;
+extern float TTangles_gyro[7];   // 陀螺仪原始角速度 dps
 
 float ypr[3];
+float TurnAccum = 0;             // 陀螺z轴积分角度（稳定，不受AHRS影响）
 uint8_t Flag_20ms = 0;
 RunMode_t RunMode = MODE_STOP;
 static uint8_t DisplayTick = 0;
@@ -64,10 +68,10 @@ RoadState_t RoadState = RECT_AB;
 float StartAngle = 0;
 uint32_t StartEnc = 0;
 
-#define STRAIGHT_PULSE  1772    // 100cm (50cm=886 ×2)
-#define TURN_ANGLE_DEG   90.0f
+#define STRAIGHT_PULSE  1791    // 100cm (实测 100cm=1791脉冲)
+#define TURN_ANGLE_DEG   45.0f   // 试80°
 #define TURN_SPEED       40
-#define STRAIGHT_SPEED   80
+#define STRAIGHT_SPEED   100
 #define SPEED_MAX       200
 #define SPEED_MIN      -200
 
@@ -156,7 +160,7 @@ void OLED_Display(void) {
     OLED_ShowString(0,16,(u8*)l,12);
     {
         uint32_t seg = EncAvg() - StartEnc;
-        uint32_t mm  = seg * 500u / 886u;
+        uint32_t mm  = seg * 1000u / 1791u;
         snprintf(l, sizeof(l), "Seg:%d.%d/100cm", (int)(mm/10), (int)(mm%10));
     }
     OLED_ShowString(0,32,(u8*)l,12);
@@ -195,7 +199,7 @@ int main(void) {
     while (1) {
         if (Flag_20ms == 1) {
             Flag_20ms = 0;
-            IMU_getYawPitchRoll(ypr);
+            IMU_getYawPitchRoll(ypr);  
 
             switch (RunMode) {
                 case MODE_STOP: Motor_Left.Target = Motor_Right.Target = 0; break;
@@ -208,11 +212,12 @@ int main(void) {
                 if (RunMode == MODE_RECT) {
                     {
                         uint32_t seg = EncAvg() - StartEnc;            // 本段脉冲
-                        uint32_t mm  = seg * 500u / 886u;              // → 毫米×10
+                        uint32_t mm  = seg * 1000u / 1791u;              // → 毫米×10
                         BlueSerial_Printf("[Rect S:%d Seg:%d.%d/100cm Yaw:%.1f "
                                           "Lt:%.0f Rt:%.0f]\r\n",
                             RoadState, (int)(mm/10), (int)(mm%10),
                             ypr[0], Motor_Left.Target, Motor_Right.Target);
+                        BlueSerial_Printf("Miss=%lu\r\n",ImuMissCount);
                     }
                 }
             }
@@ -237,9 +242,16 @@ int main(void) {
 }
 
 /* ========================== ISR ========================== */
+
 void TIMER_0_INST_IRQHandler(void) {
-    if (DL_TimerG_getPendingInterrupt(TIMER_0_INST) == DL_TIMER_IIDX_ZERO)
+    if (DL_TimerG_getPendingInterrupt(TIMER_0_INST) == DL_TIMER_IIDX_ZERO) {
+        // IMU_getYawPitchRoll(ypr);   // ISR内读IMU，保证严格50Hz
+        if (Flag_20ms)
+            ImuMissCount++;
+
         Flag_20ms = 1;
+        
+    }
 }
 
 void GROUP1_IRQHandler(void) {

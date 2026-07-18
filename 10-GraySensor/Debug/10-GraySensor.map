@@ -1,7 +1,7 @@
 ******************************************************************************
             TI ARM Clang Linker PC v4.0.4                      
 ******************************************************************************
->> Linked Fri Jul 17 20:37:11 2026
+>> Linked Sat Jul 18 14:23:58 2026
 
 OUTPUT FILE NAME:   <10-GraySensor.out>
 ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 00005711
@@ -209,12 +209,11 @@ section   page    origin      length       input sections
                   00005b66    0000000a     --HOLE-- [fill = 0]
 
 .cinit     0    00005fc0    00000080     
-                  00005fc0    00000057     (.cinit..data.load) [load image, compression = lzss]
-                  00006017    00000001     --HOLE-- [fill = 0]
-                  00006018    0000000c     (__TI_handler_table)
-                  00006024    00000008     (.cinit..bss.load) [load image, compression = zero_init]
-                  0000602c    00000010     (__TI_cinit_table)
-                  0000603c    00000004     --HOLE-- [fill = 0]
+                  00005fc0    0000005a     (.cinit..data.load) [load image, compression = lzss]
+                  0000601a    00000002     --HOLE-- [fill = 0]
+                  0000601c    0000000c     (__TI_handler_table)
+                  00006028    00000008     (.cinit..bss.load) [load image, compression = zero_init]
+                  00006030    00000010     (__TI_cinit_table)
 
 .rodata    0    00005b70    00000450     
                   00005b70    00000101     libc.a : aeabi_ctype.S.obj (.rodata:__aeabi_ctype_table_)
@@ -413,21 +412,21 @@ MODULE SUMMARY
        Total:                           2894    0         0      
                                                                  
        Stack:                           0       0         512    
-       Linker Generated:                0       123       0      
+       Linker Generated:                0       126       0      
     +--+--------------------------------+-------+---------+---------+
-       Grand Total:                     23188   1407      1359   
+       Grand Total:                     23188   1410      1359   
 
 
 LINKER GENERATED COPY TABLES
 
-__TI_cinit_table @ 0000602c records: 2, size/record: 8, table size: 16
-	.data: load addr=00005fc0, load size=00000057 bytes, run addr=20200294, run size=000000be bytes, compression=lzss
-	.bss: load addr=00006024, load size=00000008 bytes, run addr=20200000, run size=00000294 bytes, compression=zero_init
+__TI_cinit_table @ 00006030 records: 2, size/record: 8, table size: 16
+	.data: load addr=00005fc0, load size=0000005a bytes, run addr=20200294, run size=000000be bytes, compression=lzss
+	.bss: load addr=00006028, load size=00000008 bytes, run addr=20200000, run size=00000294 bytes, compression=zero_init
 
 
 LINKER GENERATED HANDLER TABLE
 
-__TI_handler_table @ 00006018 records: 3, size/record: 4, table size: 12
+__TI_handler_table @ 0000601c records: 3, size/record: 4, table size: 12
 	index: 0, handler: __TI_decompress_lzss
 	index: 1, handler: __TI_decompress_none
 	index: 2, handler: __TI_zero_init
@@ -558,11 +557,11 @@ address   name
 00000000  __TI_ATRegion2_region_sz             
 00000000  __TI_ATRegion2_src_addr              
 00000000  __TI_ATRegion2_trg_addr              
-0000602c  __TI_CINIT_Base                      
-0000603c  __TI_CINIT_Limit                     
-0000603c  __TI_CINIT_Warm                      
-00006018  __TI_Handler_Table_Base              
-00006024  __TI_Handler_Table_Limit             
+00006030  __TI_CINIT_Base                      
+00006040  __TI_CINIT_Limit                     
+00006040  __TI_CINIT_Warm                      
+0000601c  __TI_Handler_Table_Base              
+00006028  __TI_Handler_Table_Limit             
 00005465  __TI_auto_init_nobinit_nopinit       
 000047a1  __TI_decompress_lzss                 
 00005a33  __TI_decompress_none                 
@@ -914,11 +913,11 @@ address   name
 00005b63  _system_pre_init                     
 00005b70  __aeabi_ctype_table_                 
 00005b70  __aeabi_ctype_table_C                
-00006018  __TI_Handler_Table_Base              
-00006024  __TI_Handler_Table_Limit             
-0000602c  __TI_CINIT_Base                      
-0000603c  __TI_CINIT_Limit                     
-0000603c  __TI_CINIT_Warm                      
+0000601c  __TI_Handler_Table_Base              
+00006028  __TI_Handler_Table_Limit             
+00006030  __TI_CINIT_Base                      
+00006040  __TI_CINIT_Limit                     
+00006040  __TI_CINIT_Warm                      
 20200000  __start___llvm_prf_bits              
 20200000  __start___llvm_prf_cnts              
 20200000  __stop___llvm_prf_bits               

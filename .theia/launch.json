@@ -256,6 +256,24 @@
                 "name": "16--package_25_length_control copy",
                 "resourceId": "/16--package_25_length_control copy"
             }
+        },
+        {
+            "name": "16--package_16.2_8P_gray",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "16--package_16.2_8P_gray",
+                "resourceId": "/16--package_16.2_8P_gray"
+            }
+        },
+        {
+            "name": "16--package_16.3_8P_gray",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "16--package_16.3_8P_gray",
+                "resourceId": "/16--package_16.3_8P_gray"
+            }
         }
     ]
 }

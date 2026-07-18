@@ -84,6 +84,10 @@ void vofa_draw_graphical(uint8_t _dataflag)
                         Angle_PID.Kp, Angle_PID.Ki, Angle_PID.Kd
                         );
             break;
+        case 4
+        Serial_Printf(
+
+        )
         default:
             break;
     }
@@ -179,6 +183,8 @@ void vofa_set_data(uint8_t _rx_byte)
         memset(g_ucVofaBuf, 0x00, VOFA_DATAPACK_MAXLEN);
     }
 }
+
+
 static void vofa_set_sram_data(uint8_t _head, float _data)
 {
     // 跳过@，找指令标识（如P2/I2/T2）
@@ -209,6 +215,7 @@ static void vofa_set_sram_data(uint8_t _head, float _data)
     } else {
         Serial_Printf("Unknown Cmd: %c%c\r\n", cmd1, cmd2);
     }
+
 }
 static float vofa_get_data(uint8_t head, uint8_t end)
 {
@@ -289,7 +296,7 @@ void vofa_parse_packet(char *packet)
             Serial_Printf("Set Right Target = %.3f\r\n", value);
         }
     }
-    else if (cmd2 == '1')   // 右轮 PID
+    else if (cmd2 == '1')   // 角度环PID
     {
         if (cmd1 == 'P')
         {
@@ -312,6 +319,9 @@ void vofa_parse_packet(char *packet)
             Serial_Printf("Set Right Target = %.3f\r\n", value);
         }
     }
+  
+    }
+
     else
     {
         Serial_Printf("Unknown PID ID: %c%c\r\n", cmd1, cmd2);

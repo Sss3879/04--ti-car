@@ -48,8 +48,8 @@ PID_t Motor_Right={
 
 // ======== 灰度传感器变量 ========
 	// 黑白校准值(实测标定: 黑≈330, 白≈1600~3000)
-	unsigned short white[8] = {871,874,1437,1436,1444,1439,1611,1617   };
-	unsigned short black[8] = {237,235,245,250,250,248,250,252  };
+	unsigned short white[8] = {1945,2299,1819,3076,2165,1716,2188,1884   };
+	unsigned short black[8] = {273,323,244,455,184,165,316,575 };
 unsigned short Anolog[8]  = {0};
 unsigned short Normal[8]  = {0};
 
